@@ -47,6 +47,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.Writer;
 import java.io.*;
+import hudson.EnvVars;
+import hudson.Launcher.*;
+import hudson.Proc;
 
 
 public class ZanataBuilder extends Builder implements SimpleBuildStep {
@@ -97,11 +100,12 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
          listener.getLogger().println("Running Zanata Sync, project file: " + projFile);
 
+
          if (syncG2zanata) {
             listener.getLogger().println("Git to Zanata sync is enabled, running command:");
             listener.getLogger().println(commandG2Z + "\n");
             
-            if  (runShellCommandInBuild(commandG2Z, listener)){
+            if  (runShellCommandInBuild(commandG2Z, listener, build)){
                 listener.getLogger().println("Git to Zanata sync finished.\n");
             }
 
@@ -112,7 +116,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Zanata to Git sync is enabled, running command:");
             listener.getLogger().println(commandZ2G + "\n");
 
-            if  (runShellCommandInBuild(commandZ2G, listener)){
+            if  (runShellCommandInBuild(commandZ2G, listener, build)){
                 listener.getLogger().println("Zanata to Git sync finished.\n");
             }
          };
@@ -125,10 +129,15 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
          */
     }
 
-    private boolean runShellCommandInBuild(String command, TaskListener listener){
+    private boolean runShellCommandInBuild(String command, TaskListener listener, Run<?,?> builder){
 
          try {
-             Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command});
+
+             EnvVars envs = builder.getEnvironment(listener);
+
+             Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command}, 
+                                                    envs.toString().split(", "),
+                                                    new File(envs.get("WORKSPACE")));
 
              try (BufferedReader in = new BufferedReader(
                                      new InputStreamReader(pg.getInputStream(),"UTF8"));) {
@@ -145,6 +154,10 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
              }
          } catch (IOException e) {
              listener.getLogger().println("Can't run command:" + command);
+             e.printStackTrace();
+             return false;
+         } catch (InterruptedException e) {
+             listener.getLogger().println("Can't run command - InterruptedException.");
              e.printStackTrace();
              return false;
          }
@@ -234,7 +247,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             iniLocation = formData.getString("iniLocation");
             iniContents = formData.getString("iniContents");
 
-            String iniFullPath = System.getProperty("JENKINS_HOME") + "/" + iniLocation;
+            String iniFullPath = System.getProperty("HOME") + "/" + iniLocation;
             File file = new File(iniFullPath);
 
             try {
