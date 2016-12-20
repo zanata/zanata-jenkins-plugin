@@ -247,7 +247,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             iniLocation = formData.getString("iniLocation");
             iniContents = formData.getString("iniContents");
 
-            String iniFullPath = System.getProperty("HOME") + "/" + iniLocation;
+            String iniFullPath = System.getProperty("JENKINS_HOME") + "/" + iniLocation;
             File file = new File(iniFullPath);
 
             try {
