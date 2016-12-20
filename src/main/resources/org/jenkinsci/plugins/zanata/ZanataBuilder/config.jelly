@@ -14,14 +14,14 @@
     <f:textbox default="zanata.xml"></f:textbox>
   </f:entry>
   <f:entry title="Command to sync from source Git repo to Zanata" field="commandG2Z">
-    <f:textarea default="whoami&#10;printenv&#10;find . -type f -name 'zanata.xml' \&#10;  -execdir pwd \; \&#10;  -execdir ls \; \&#10;  -execdir echo 'Running zanata-cli -B stats\n' \; \&#10;  -execdir zanata-cli -B stats \; \&#10;  -execdir echo 'Running zanata-cli -B push\n' \; \&#10;  -execdir zanata-cli -B push \; \&#10;  -execdir echo 'Running zanata-cli -B pull\n' \; \&#10;  -execdir zanata-cli -B pull \;"></f:textarea>
+    <f:textarea default="find . -type f -not -path &quot;*/target/*&quot; -name 'zanata.xml' \&#10;  -execdir pwd \; \&#10;  -execdir ls \; \&#10;  -execdir echo 'Running zanata-cli -B stats\n' \; \&#10;  -execdir zanata-cli -B stats \; \&#10;  -execdir echo 'Running zanata-cli -B push\n' \; \&#10;  -execdir zanata-cli -B push \; \&#10;  -execdir echo 'Running zanata-cli -B pull\n' \; \&#10;  -execdir zanata-cli -B pull \;"></f:textarea>
   </f:entry>
   <f:entry title="Enable" field="syncG2zanata"
       description="Check to sync from Git Repo to Zanata">
       <f:checkbox/>
   </f:entry>
   <f:entry title="Command to sync from Zanata to source Git repo" field="commandZ2G">
-    <f:textarea default="find . -type f -not -path './target/*' -name 'zanata.xml' \&#10;  -execdir echo '=== Commiting new translation...\n' \; \&#10;  -execdir pwd \; \&#10;  -execdir ls \; \&#10;  -execdir echo '=== Git add...\n' \; \&#10;  -execdir git add . \; \&#10;  -execdir echo '=== Git commit ...\n' \; \&#10;  -execdir git commit -m '$BUILD_TAG' \; \&#10;  -execdir echo '=== Finished commit prepration.\n' \;"></f:textarea>
+ <f:textarea default="find . -type f -not -path &quot;*/target/*&quot; -name 'zanata.xml' \&#10;  -execdir echo &quot;=== Commiting new translation $BUILD_TAG...\n&quot; \; \&#10;  -execdir pwd \; \&#10;  -execdir ls \; \&#10;  -execdir echo '=== Git add...\n' \; \&#10;  -execdir git add . \; \&#10;  -execdir echo '=== Git commit ...\n' \; \&#10;  -execdir git commit -m &quot;$BUILD_TAG&quot; \; \&#10;  -execdir echo &quot;=== Finished commit preparation - $BUILD_TAG.\n&quot; \;"></f:textarea>
   </f:entry>
   <f:entry title="Enable" field="syncZ2git"
       description="Check to prepare commit of translation from Zanata to Git, you need to push in After Build.">
