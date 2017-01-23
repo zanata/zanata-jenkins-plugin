@@ -23,17 +23,27 @@ SOFTWARE.
 */
 
 package org.jenkinsci.plugins.zanata;
+import hudson.AbortException;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Util;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.util.FormValidation;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
@@ -47,6 +57,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.Writer;
 import java.io.*;
+
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
+import com.cloudbees.plugins.credentials.common.PasswordCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.EnvVars;
 import hudson.Launcher.*;
 import hudson.Proc;
@@ -57,18 +76,20 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
     private final String projFile;
     private final String commandG2Z;
     private final String commandZ2G;
+    private final String zanataCredentialsId;
     private final boolean syncG2zanata;
     private final boolean syncZ2git;
 
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ZanataBuilder(String projFile, String commandG2Z, boolean syncG2zanata, String commandZ2G, boolean syncZ2git) {
+    public ZanataBuilder(String projFile, String commandG2Z, boolean syncG2zanata, String commandZ2G, boolean syncZ2git, String zanataCredentialsId) {
         this.projFile = projFile;
         this.syncG2zanata = syncG2zanata;
         this.syncZ2git = syncZ2git;
         this.commandG2Z = commandG2Z;
         this.commandZ2G = commandZ2G;
+        this.zanataCredentialsId = zanataCredentialsId;
     }
 
     /**
@@ -95,17 +116,37 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         return syncZ2git;
     }
 
+    public String getZanataCredentialsId() {
+        return zanataCredentialsId;
+    }
+
     @Override
-    public void perform(Run<?,?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
+    public void perform(Run<?,?> build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws IOException, InterruptedException {
 
          listener.getLogger().println("Running Zanata Sync, project file: " + projFile);
 
+         // TODO we should depend on credentials-binding-plugin and use credential as environment variables
+        IdCredentials cred = CredentialsProvider.findCredentialById(zanataCredentialsId, IdCredentials.class, build);
+        if (cred == null) {
+            throw new AbortException("Zanata credential with ID [" + zanataCredentialsId + "] can not be found.");
+        }
+        CredentialsProvider.track(build, cred);
+        StandardUsernameCredentials usernameCredentials = (StandardUsernameCredentials) cred;
+        String apiKey =
+                ((PasswordCredentials) usernameCredentials).getPassword()
+                        .getPlainText();
+        String username = usernameCredentials.getUsername();
 
-         if (syncG2zanata) {
+        EnvVars envs = build.getEnvironment(listener);
+        envs.put("ZANATA_USERNAME", username);
+        envs.put("ZANATA_APIKEY", apiKey);
+
+        if (syncG2zanata) {
             listener.getLogger().println("Git to Zanata sync is enabled, running command:");
             listener.getLogger().println(commandG2Z + "\n");
-            
-            if  (runShellCommandInBuild(commandG2Z, listener, build)){
+
+            if  (runShellCommandInBuild(commandG2Z + " --username $ZANATA_USERNAME --key $ZANATA_APIKEY", listener, build)){
                 listener.getLogger().println("Git to Zanata sync finished.\n");
             }
 
@@ -116,12 +157,12 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Zanata to Git sync is enabled, running command:");
             listener.getLogger().println(commandZ2G + "\n");
 
-            if  (runShellCommandInBuild(commandZ2G, listener, build)){
+            if  (runShellCommandInBuild(commandZ2G  + " --username $ZANATA_USERNAME --key $ZANATA_APIKEY", listener, build)){
                 listener.getLogger().println("Zanata to Git sync finished.\n");
             }
          };
 
-         /*       
+         /*
          This is where you 'build' the project.
          Since this is a dummy, we just say 'hello world' and call that a build.
 
@@ -135,7 +176,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
              EnvVars envs = builder.getEnvironment(listener);
 
-             Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command}, 
+             Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command},
                                                     envs.toString().split(", "),
                                                     new File(envs.get("WORKSPACE")));
 
@@ -161,7 +202,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
              e.printStackTrace();
              return false;
          }
- 
+
         return true;
     }
 
@@ -183,19 +224,11 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        /**
-         * To persist global configuration information,
-         * simply store it in a field and call save().
-         *
-         * <p>
-         * If you don't want fields to be persisted, use {@code transient}.
-         */
-        private String iniLocation;
-        private String iniContents;
+
 
 
         /**
-         * In order to load the persisted global configuration, you have to 
+         * In order to load the persisted global configuration, you have to
          * call load() in the constructor.
          */
         public DescriptorImpl() {
@@ -209,7 +242,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
                                               @QueryParameter String commandZ2G,
                                               @QueryParameter boolean syncZ2git)
                 throws IOException, ServletException {
- 
+
             if (value.length() == 0)
                 return FormValidation.error("Please set a project name such as zanata.xml");
 
@@ -223,9 +256,65 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
 
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillZanataCredentialsIdItems(@AncestorInPath
+                Job context,
+                @QueryParameter String remote,
+                @QueryParameter String credentialsId) {
+            if (context == null || !context.hasPermission(Item.CONFIGURE)) {
+                // previously it was recommended to just return an empty ListBoxModel
+                // now recommended to return a model with just the current value
+                return new StandardUsernameListBoxModel().includeCurrentValue(credentialsId);
+            }
+            // previously it was recommended to use the withXXX methods providing the credentials instances directly
+            // now recommended to populate the model using the includeXXX methods which call through to
+            // CredentialsProvider.listCredentials and to ensure that the current value is always present using
+            // includeCurrentValue
+            return new StandardUsernameListBoxModel()
+                    .includeEmptyValue()
+                    .includeAs(Tasks.getAuthenticationOf((Queue.Task) context), context, StandardUsernameCredentials.class,
+                            URIRequirementBuilder.fromUri(remote).build())
+                    .includeCurrentValue(credentialsId);
+        }
+
+        @SuppressWarnings("unused")
+        public FormValidation doCheckZanataCredentialsId(@AncestorInPath AbstractProject context,
+                @QueryParameter String url,
+                @QueryParameter String value) {
+            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                    context != null && !context.hasPermission(Item.EXTENDED_READ)) {
+                return FormValidation.ok();
+            }
+
+            value = Util.fixEmptyAndTrim(value);
+            if (value == null) {
+                return FormValidation.ok();
+            }
+
+            url = Util.fixEmptyAndTrim(url);
+            if (url == null) {
+                // not set, can't check
+                return FormValidation.ok();
+            }
+
+            for (ListBoxModel.Option o : CredentialsProvider.listCredentials(
+                    StandardUsernameCredentials.class,
+                    context,
+                    Tasks.getAuthenticationOf(context),
+                    URIRequirementBuilder.fromUri(url).build(),
+                    CredentialsMatchers
+                            .instanceOf(StandardUsernamePasswordCredentials.class))) {
+                if (StringUtils.equals(value, o.value)) {
+                    return FormValidation.ok();
+                }
+            }
+            // no credentials available, can't check
+            return FormValidation.warning("Cannot find any credentials with id " + value);
+        }
+
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
+            // Indicates that this builder can be used with all kinds of project types
             return true;
         }
 
@@ -244,53 +333,8 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
             // ^Can also use req.bindJSON(this, formData);
             //  (easier when there are many fields; need set* methods for this, like setUseFrench)
 
-            iniLocation = formData.getString("iniLocation");
-            iniContents = formData.getString("iniContents");
-
-            String iniFullPath = System.getProperty("JENKINS_HOME") + "/" + iniLocation;
-            File file = new File(iniFullPath);
-
-            try {
-                if (!file.exists()) {
-                   if (!(file.getParentFile().exists())) {
-                       if (!(file.getParentFile().mkdirs())) {
-                           throw new IOException("Unable to create directory " + iniFullPath );
-                       }
-                   }
-                   if (!(file.createNewFile())) {
-                      throw new IOException("Unable to create file " + iniFullPath );
-                   }
-                }
-            } catch (IOException e) {
-                System.out.println("File could not be created or opened: " + iniFullPath);
-                e.printStackTrace();
-            }
-
-            try (Writer fstream = new OutputStreamWriter(new FileOutputStream(iniFullPath), "UTF8");) {
-                fstream.write(iniContents);
-                fstream.flush();
-                fstream.close();
-                System.out.println("File written Succesfully: " + iniFullPath);
-            } catch (IOException e) {
-                System.out.println("File write NOT Succesfully: " + iniFullPath);
-                e.printStackTrace();
-            }
-
             save();
             return super.configure(req,formData);
-        }
-
-        /**
-         * This method returns true if the global configuration says we should speak French.
-         *
-         * The method name is bit awkward because global.jelly calls this method to determine
-         * the initial state of the checkbox by the naming convention.
-         */
-        public String getIniLocation() {
-            return iniLocation;
-        }
-        public String getIniContents() {
-            return iniContents;
         }
     }
 }

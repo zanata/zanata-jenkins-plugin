@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
   <!--
     This jelly script is used for per-project configuration.
 
@@ -12,6 +12,9 @@
   -->
   <f:entry title="Project File" field="projFile">
     <f:textbox default="zanata.xml"></f:textbox>
+  </f:entry>
+  <f:entry title="Zanata Credential" field="zanataCredentialsId">
+    <c:select/>
   </f:entry>
   <f:entry title="Command to sync from source Git repo to Zanata" field="commandG2Z">
     <f:textarea default="find . -type f -not -path &quot;*/target/*&quot; -name 'zanata.xml' \&#10;  -execdir pwd \; \&#10;  -execdir ls \; \&#10;  -execdir echo 'Running zanata-cli -B stats\n' \; \&#10;  -execdir zanata-cli -B stats \; \&#10;  -execdir echo 'Running zanata-cli -B push\n' \; \&#10;  -execdir zanata-cli -B push \; \&#10;  -execdir echo 'Running zanata-cli -B pull\n' \; \&#10;  -execdir zanata-cli -B pull \;"></f:textarea>
