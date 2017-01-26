@@ -29,7 +29,9 @@ import hudson.FilePath;
 import hudson.util.FormValidation;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
+import hudson.model.Build;
 import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import jenkins.tasks.SimpleBuildStep;
@@ -47,28 +49,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.Writer;
 import java.io.*;
+import java.util.*;
 import hudson.EnvVars;
 import hudson.Launcher.*;
 import hudson.Proc;
 
 
-public class ZanataBuilder extends Builder implements SimpleBuildStep {
+public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
 
     private final String projFile;
-    private final String commandG2Z;
-    private final String commandZ2G;
     private final boolean syncG2zanata;
     private final boolean syncZ2git;
 
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ZanataBuilder(String projFile, String commandG2Z, boolean syncG2zanata, String commandZ2G, boolean syncZ2git) {
+    public ZanataCliBuilder(String projFile, boolean syncG2zanata, boolean syncZ2git) {
         this.projFile = projFile;
         this.syncG2zanata = syncG2zanata;
         this.syncZ2git = syncZ2git;
-        this.commandG2Z = commandG2Z;
-        this.commandZ2G = commandZ2G;
     }
 
     /**
@@ -77,14 +76,6 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
     public String getProjFile() {
         return projFile;
-    }
-
-    public String getCommandG2Z() {
-        return commandG2Z;
-    }
-
-    public String getCommandZ2G() {
-        return commandZ2G;
     }
 
     public boolean getSyncG2zanata() {
@@ -98,14 +89,18 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
     @Override
     public void perform(Run<?,?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
 
+         String commandG2Z;
+         String commandZ2G;
+
          listener.getLogger().println("Running Zanata Sync, project file: " + projFile);
 
-
          if (syncG2zanata) {
+            commandG2Z = getDescriptor().getCommandG2Z();
+
             listener.getLogger().println("Git to Zanata sync is enabled, running command:");
             listener.getLogger().println(commandG2Z + "\n");
             
-            if  (runShellCommandInBuild(commandG2Z, listener, build)){
+            if  (runShellCommandInBuild(commandG2Z, listener, build, workspace)){
                 listener.getLogger().println("Git to Zanata sync finished.\n");
             }
 
@@ -113,10 +108,12 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
 
          if (syncZ2git) {
+            commandZ2G = getDescriptor().getCommandZ2G();
+
             listener.getLogger().println("Zanata to Git sync is enabled, running command:");
             listener.getLogger().println(commandZ2G + "\n");
 
-            if  (runShellCommandInBuild(commandZ2G, listener, build)){
+            if  (runShellCommandInBuild(commandZ2G, listener, build, workspace)){
                 listener.getLogger().println("Zanata to Git sync finished.\n");
             }
          };
@@ -129,15 +126,23 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
          */
     }
 
-    private boolean runShellCommandInBuild(String command, TaskListener listener, Run<?,?> builder){
+    private boolean runShellCommandInBuild(String command, TaskListener listener, Run<?,?> builder, FilePath workspace){
 
          try {
 
-             EnvVars envs = builder.getEnvironment(listener);
+             EnvVars jenkinsEnvs = builder.getEnvironment(listener);
+             Map<String, String> sysEnvs = System.getenv();
+
+             Map<String, String> allEnvs = new HashMap<String, String> ();
+             allEnvs.putAll(sysEnvs);
+             allEnvs.putAll(jenkinsEnvs);
+
+             listener.getLogger().println("workspace: " + workspace.toURI());
 
              Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command}, 
-                                                    envs.toString().split(", "),
-                                                    new File(envs.get("WORKSPACE")));
+                                                    allEnvs.toString().split(", "),
+                                                    new File(workspace.toURI()));
+
 
              try (BufferedReader in = new BufferedReader(
                                      new InputStreamReader(pg.getInputStream(),"UTF8"));) {
@@ -152,6 +157,22 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
                  e.printStackTrace();
                  return false;
              }
+             try (BufferedReader in = new BufferedReader(
+                                 new InputStreamReader(pg.getErrorStream(),"UTF8"));) {
+                 String line = null;
+                 while ((line = in.readLine()) != null)
+                     { System.out.println(line);
+                       listener.getLogger().println(line);
+                 }
+                 in.close();
+             } catch (IOException e) {
+                 listener.getLogger().println("Can't generate error message of command:" + command);
+                 e.printStackTrace();
+                 return false;
+             }
+             pg.waitFor();
+             listener.getLogger().println("Run command return:  " + Integer.toString(pg.exitValue()));
+
          } catch (IOException e) {
              listener.getLogger().println("Can't run command:" + command);
              e.printStackTrace();
@@ -161,8 +182,8 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
              e.printStackTrace();
              return false;
          }
+         return true;
  
-        return true;
     }
 
     // Overridden for better type safety.
@@ -174,11 +195,11 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
     }
 
     /**
-     * Descriptor for {@link ZanataBuilder}. Used as a singleton.
+     * Descriptor for {@link ZanataCliBuilder}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
      * <p>
-     * See {@code src/main/resources/hudson/plugins/hello_world/ZanataBuilder/*.jelly}
+     * See {@code src/main/resources/hudson/plugins/hello_world/ZanataCliBuilder/*.jelly}
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
@@ -192,6 +213,8 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
          */
         private String iniLocation;
         private String iniContents;
+        private String commandG2Z;
+        private String commandZ2G;
 
 
         /**
@@ -204,9 +227,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
 
         public FormValidation doCheckProjFile(@QueryParameter String value,
-                                              @QueryParameter String commandG2Z,
                                               @QueryParameter boolean syncG2zanata,
-                                              @QueryParameter String commandZ2G,
                                               @QueryParameter boolean syncZ2git)
                 throws IOException, ServletException {
  
@@ -214,9 +235,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
                 return FormValidation.error("Please set a project name such as zanata.xml");
 
             System.out.println("Project File is : " + value);
-            System.out.println("Project G2Z is : " + commandG2Z);
             System.out.println(syncG2zanata);
-            System.out.println("Project Z2G is : " + commandZ2G);
             System.out.println(syncZ2git);
 
             save ();
@@ -224,6 +243,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         }
 
 
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
@@ -232,6 +252,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Override
         public String getDisplayName() {
             return "Zanata Localization Sync";
         }
@@ -246,8 +267,21 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
 
             iniLocation = formData.getString("iniLocation");
             iniContents = formData.getString("iniContents");
+            commandG2Z = formData.getString("commandG2Z");
+            commandZ2G = formData.getString("commandZ2G");
 
-            String iniFullPath = System.getProperty("JENKINS_HOME") + "/" + iniLocation;
+            String iniFullPath;
+
+            if (System.getProperty("JENKINS_HOME") != null) {
+                iniFullPath = System.getProperty("JENKINS_HOME") + "/" + iniLocation;
+            } else {
+                if (System.getProperty("user.home") != null) {
+                    iniFullPath = System.getProperty("user.home") + "/" + iniLocation;
+                } else {
+                    iniFullPath = "/var/lib/jenkins" + "/" + iniLocation;
+                }
+            }
+
             File file = new File(iniFullPath);
 
             try {
@@ -266,16 +300,17 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
                 e.printStackTrace();
             }
 
-            try (Writer fstream = new OutputStreamWriter(new FileOutputStream(iniFullPath), "UTF8");) {
-                fstream.write(iniContents);
-                fstream.flush();
-                fstream.close();
-                System.out.println("File written Succesfully: " + iniFullPath);
-            } catch (IOException e) {
-                System.out.println("File write NOT Succesfully: " + iniFullPath);
-                e.printStackTrace();
+            if (file.exists()) {
+                try (Writer fstream = new OutputStreamWriter(new FileOutputStream(iniFullPath), "UTF8");) {
+                    fstream.write(iniContents);
+                    fstream.flush();
+                    fstream.close();
+                    System.out.println("File written Succesfully: " + iniFullPath);
+                } catch (IOException e) {
+                    System.out.println("File write NOT Succesfully: " + iniFullPath);
+                    e.printStackTrace();
+                }
             }
-
             save();
             return super.configure(req,formData);
         }
@@ -291,6 +326,12 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         }
         public String getIniContents() {
             return iniContents;
+        }
+        public String getCommandG2Z() {
+            return commandG2Z;
+        }
+        public String getCommandZ2G() {
+            return commandZ2G;
         }
     }
 }
