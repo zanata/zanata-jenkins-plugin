@@ -24,9 +24,10 @@
          ~ hpi-plugin.version: The HPI Maven Plugin version used by the plugin..
          ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
     -->
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.${java.level}</maven.compiler.source>
+    <maven.compiler.target>1.${java.level}</maven.compiler.target>
     <workflow.version>1.14</workflow.version>
+    <assertj.version>3.6.2</assertj.version>
   </properties>
 
   <name>Zanata Plugin</name>
@@ -106,6 +107,7 @@
       <version>2.2.0</version>
     </dependency>
 
+    <!-- ========= testing dependencies ========= -->
     <!-- dependencies on Jenkins Pipeline plugins -->
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -137,6 +139,87 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>permgen</id>
+      <activation>
+        <jdk>[,1.8)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>-Djava.awt.headless=true -XX:MaxPermSize=512m @{argLine}</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>default-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>COMPLEXITY</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.00</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- We use late property evaluation (@{argLine}) so that surefire
+               will pick up the argLine set by jacoco:prepare-agent. -->
+          <argLine>@{argLine}</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

@@ -24,6 +24,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -64,13 +65,13 @@ public class ZanataCLIInstallWrapper extends BuildWrapper {
             return name;
         }
 
-        public @CheckForNull
-        ZanataCLIInstall toZanataCLIInstall() {
+        @CheckForNull
+        public ZanataCLIInstall toZanataCLIInstall() {
             return ((ZanataCLIInstall.DescriptorImpl) Jenkins.getActiveInstance().getDescriptor(ZanataCLIInstall.class)).byName(name);
         }
 
-        public @Nonnull
-        ZanataCLIInstall toCustomToolValidated() {
+        @Nonnull
+        public ZanataCLIInstall toCLIValidated() {
             ZanataCLIInstall tool = toZanataCLIInstall();
             if (tool == null) {
                 throw new RuntimeException("Can not find Zanata CLI. Has it been deleted in global configuration?");
@@ -78,12 +79,12 @@ public class ZanataCLIInstallWrapper extends BuildWrapper {
             return tool;
         }
     }
-
+    private String zanataCLIInstall;
     private @Nonnull SelectedCLI[] selectedCLIs = new SelectedCLI[0];
     private final boolean convertHomesToUppercase;
 
     @DataBoundConstructor
-    public ZanataCLIInstallWrapper(SelectedCLI[] selectedCLIs, boolean convertHomesToUppercase, String zanataCLIInstall) {
+    public ZanataCLIInstallWrapper(SelectedCLI[] selectedCLIs, boolean convertHomesToUppercase) {
         this.selectedCLIs = (selectedCLIs != null) ?
                 selectedCLIs : new SelectedCLI[0];
         this.convertHomesToUppercase = convertHomesToUppercase;
@@ -95,6 +96,11 @@ public class ZanataCLIInstallWrapper extends BuildWrapper {
 
     public @Nonnull SelectedCLI[] getSelectedCLIs() {
         return selectedCLIs.clone();
+    }
+
+    @DataBoundSetter
+    public void setZanataCLIInstall(String zanataCLIInstall) {
+        this.zanataCLIInstall = zanataCLIInstall;
     }
 
     @Override
@@ -138,7 +144,7 @@ public class ZanataCLIInstallWrapper extends BuildWrapper {
         }
 
         for (SelectedCLI selectedCLIName : selectedCLIs) {
-            ZanataCLIInstall tool = selectedCLIName.toCustomToolValidated();
+            ZanataCLIInstall tool = selectedCLIName.toCLIValidated();
             logMessage(listener, "Starting installation");
 
             // This installs the tool if necessary
