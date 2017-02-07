@@ -11,7 +11,7 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.gitclient.Git;
-import org.jenkinsci.plugins.zanata.cli.SyncJobDetail;
+import org.jenkinsci.plugins.zanata.cli.HasSyncJobDetail;
 import org.jenkinsci.plugins.zanata.cli.service.impl.ZanataSyncServiceImpl;
 import org.jenkinsci.plugins.zanata.git.GitSyncService;
 import org.jenkinsci.remoting.RoleChecker;
@@ -25,12 +25,12 @@ import org.slf4j.LoggerFactory;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.PasswordCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -57,22 +57,12 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
 /**
- * Sample {@link Builder}.
+ * Zanata builder that uses the bundled zanata client commands classes.
  *
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked
- * and a new {@link ZanataBuilder} is created. The created
- * instance is persisted to the project configuration XML by using
- * XStream, so this allows you to use instance fields (like {@link #zanataURL})
- * to remember the configuration.
- *
- * <p>
- * When a build is performed, the {@link #perform} method will be invoked.
- *
- * @author Kohsuke Kawaguchi
+ * @author Patrick Huang <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
-public class ZanataBuilder extends Builder implements SimpleBuildStep {
+public class ZanataBuilder extends Builder implements SimpleBuildStep,
+        HasSyncJobDetail {
     private static final Logger log =
             LoggerFactory.getLogger(ZanataBuilder.class);
 
@@ -83,6 +73,8 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
     private boolean pushToZanata;
     private boolean pullFromZanata;
     private String zanataCredentialsId;
+    private String zanataUsername;
+    private String zanataSecret;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
@@ -99,18 +91,22 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
     /**
      * We'll use this from the {@code config.jelly}.
      */
+    @Override
     public String getZanataURL() {
         return zanataURL;
     }
 
+    @Override
     public String getSyncOption() {
         return syncOption;
     }
 
+    @Override
     public String getZanataProjectConfigs() {
         return zanataProjectConfigs;
     }
 
+    @Override
     public String getZanataLocaleIds() {
         return zanataLocaleIds;
     }
@@ -123,6 +119,17 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         return pullFromZanata;
     }
 
+    @Override
+    public String getZanataUsername() {
+        return zanataUsername;
+    }
+
+    @Override
+    public String getZanataSecret() {
+        return zanataSecret;
+    }
+
+    @Override
     public String getZanataCredentialsId() {
         return zanataCredentialsId;
     }
@@ -163,44 +170,34 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         // This is where you 'build' the project.
         Handler logHandler = configLogger(listener.getLogger());
 
-        // TODO pahuang check credential plugin
-//        Plugin credentialsPlugin = Jenkins.getInstance().getPlugin("credentials-uploader");
-
-        IdCredentials cred = CredentialsProvider.findCredentialById(zanataCredentialsId, IdCredentials.class, build);
+        StandardUsernameCredentials cred = CredentialsProvider.findCredentialById(zanataCredentialsId, StandardUsernameCredentials.class, build);
         if (cred == null) {
-            throw new AbortException("Zanata credential with ID [" + zanataCredentialsId + "] can not be found.");
+            throw new AbortException("credential with ID [" + zanataCredentialsId + "] can not be found.");
         }
         CredentialsProvider.track(build, cred);
-        StandardUsernameCredentials usernameCredentials = (StandardUsernameCredentials) cred;
-        String apiKey =
-                ((PasswordCredentials) usernameCredentials).getPassword()
-                        .getPlainText();
-        logger(listener).println("Running Zanata sync for "+ zanataURL +"!");
-        SyncJobDetail syncJobDetail = SyncJobDetail.Builder.builder()
-                .setZanataUrl(zanataURL)
-                .setZanataUsername(usernameCredentials.getUsername())
-                .setZanataSecret(apiKey)
-                .setSyncToZanataOption(syncOption)
-                .setProjectConfigs(zanataProjectConfigs)
-                .setLocaleId(zanataLocaleIds)
-                .build();
+        String apiKey = getAPIKeyOrThrow(cred);
+        this.zanataUsername = cred.getUsername();
+        this.zanataSecret = apiKey;
+        if (!Strings.isNullOrEmpty(zanataURL)) {
+            logger(listener).println("Running Zanata sync for:" + zanataURL);
+        }
 
-        logger(listener).println("Job config: " + syncJobDetail.toString());
+        logger(listener).println("Job config: " + this.describeSyncJob());
 
-        ZanataSyncServiceImpl service =
-                new ZanataSyncServiceImpl(syncJobDetail);
+        ZanataSyncServiceImpl zanataSyncService =
+                new ZanataSyncServiceImpl(this);
 
 
         try {
             if (pushToZanata) {
-                pushToZanata(workspace, service);
+                pushToZanata(workspace, zanataSyncService);
             }
             if (pullFromZanata) {
                 Git git =
                         Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
                 GitSyncService
-                        gitSyncService = new GitSyncService(syncJobDetail, git);
-                pullFromZanata(workspace, service, gitSyncService);
+                        gitSyncService = new GitSyncService(this, git);
+                pullFromZanata(workspace, zanataSyncService, gitSyncService);
             }
         } catch (IOException | InterruptedException e) {
             logger(listener).println("Zanata Sync failed:" + e.getMessage());
@@ -208,6 +205,13 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         } finally {
             removeLogger(logHandler);
         }
+    }
+
+    private static String getAPIKeyOrThrow(StandardUsernameCredentials cred) {
+        if (cred instanceof PasswordCredentials) {
+            return ((PasswordCredentials) cred).getPassword().getPlainText();
+        }
+        throw new RuntimeException("can not get Zanata API key from credential with id:" + cred.getId());
     }
 
     @SuppressFBWarnings("LG_LOST_LOGGER_DUE_TO_WEAK_REFERENCE")
@@ -266,14 +270,6 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         return listener.getLogger();
     }
 
-    // Overridden for better type safety.
-    // If your plugin doesn't really define any property on Descriptor,
-    // you don't have to do this.
-    @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
-    }
-
     /**
      * Descriptor for {@link ZanataBuilder}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
@@ -284,13 +280,6 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        /**
-         * In order to load the persisted global configuration, you have to
-         * call load() in the constructor.
-         */
-        public DescriptorImpl() {
-            load();
-        }
 
         // ========== FORM validation ===========================================
         // ========== https://wiki.jenkins-ci.org/display/JENKINS/Form+Validation
@@ -395,23 +384,11 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep {
         }
 
         /**
-         * This human readable zanataCLIVersion is used in the configuration screen.
+         * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
             return "Zanata Sync";
         }
-
-        @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            // To persist global configuration information,
-            // set that to properties and call save().
-//            useFrench = formData.getBoolean("useFrench");
-            // ^Can also use req.bindJSON(this, formData);
-            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
-            save();
-            return super.configure(req,formData);
-        }
-
     }
 }
 

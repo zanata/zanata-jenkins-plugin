@@ -68,10 +68,11 @@ public class ZanataCLIInstallTest extends WithJenkins {
         assertThat(wrapper.getSelectedCLIs()).contains(selectedCLI);
 
         project.getBuildWrappersList().add(wrapper);
-        Builder b = new Shell("echo $zanata_cli_4_0_0_home;");
+        Builder b = new Shell("echo");
         project.getBuildersList().add(b);
         Future<FreeStyleBuild> build = project.scheduleBuild2(0);
         j.assertBuildStatusSuccess(build);
+        j.assertLogContains("[ZANATA-CLI Install] Setting zanata_cli_4_0_0_HOME", build.get());
 
     }
 
@@ -84,14 +85,13 @@ public class ZanataCLIInstallTest extends WithJenkins {
     }
 
     public static ZanataCLIInstall createCLI(String version) throws IOException {
-        List<ToolInstaller> installers = new ArrayList<ToolInstaller>();
-        installers.add(new CommandInstaller(null, "echo hello",
-                "./"));
+        List<ToolInstaller> installers = Lists.newArrayList(
+                new CommandInstaller(null, "echo hello", "./"));
 
-        List<ToolProperty<ToolInstallation>> properties = new ArrayList<>();
+        List<ToolProperty<ToolInstallation>> properties = Lists.newArrayList();
         properties.add(new InstallSourceProperty(installers));
 
-        return new ZanataCLIInstall(null, version, properties);
+        return new ZanataCLIInstall("", version, properties);
     }
 
     @Test

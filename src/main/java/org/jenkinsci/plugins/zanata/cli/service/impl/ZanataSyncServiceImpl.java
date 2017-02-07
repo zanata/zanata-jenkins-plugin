@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-import org.jenkinsci.plugins.zanata.cli.SyncJobDetail;
+import org.jenkinsci.plugins.zanata.cli.HasSyncJobDetail;
 import org.jenkinsci.plugins.zanata.cli.service.ZanataSyncService;
 import org.jenkinsci.plugins.zanata.cli.util.PushPullOptionsUtil;
 import org.jenkinsci.plugins.zanata.exception.ZanataSyncException;
@@ -62,15 +62,55 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
     private final String zanataUrl;
     private final Set<String> projectConfigs;
 
-    public ZanataSyncServiceImpl(SyncJobDetail jobDetail) {
-        String zanataUrl = jobDetail.getZanataUrl();
+//    public ZanataSyncServiceImpl(SyncJobDetail jobDetail) {
+//        String zanataUrl = jobDetail.getZanataUrl();
+//        String username = jobDetail.getZanataUsername();
+//        String apiKey = jobDetail.getZanataSecret();
+//        String syncToZanataOption = jobDetail.getSyncToZanataOption();
+//        String pushToZanataOption = Strings.emptyToNull(syncToZanataOption);
+//        projectConfigs = getProjectConfigs(jobDetail.getProjectConfigs());
+//
+//        String localeId = jobDetail.getLocaleId();
+//        this.zanataUrl = zanataUrl;
+//        PullOptionsImpl pullOptions = new PullOptionsImpl();
+//        PushOptionsImpl pushOptions = new PushOptionsImpl();
+//        pullOptions.setInteractiveMode(false);
+//        pushOptions.setInteractiveMode(false);
+//        pullOptions.setUsername(username);
+//        pullOptions.setKey(apiKey);
+//        pushOptions.setUsername(username);
+//        pushOptions.setKey(apiKey);
+//        pushOptions.setPushType(pushToZanataOption);
+//        // TODO until https://zanata.atlassian.net/browse/ZNTA-1427 is fixed we can't trust etag cache
+//        pullOptions.setUseCache(false);
+//
+//        this.pushOptions = pushOptions;
+//        this.pullOptions = pullOptions;
+////        this.pushOptions.setLogHttp(true);
+////        this.pullOptions.setLogHttp(true);
+//        // if localeId is given, only handle this locale
+//        if (!Strings.isNullOrEmpty(localeId)) {
+//            pullOptions.setLocales(localeId);
+//            pushOptions.setLocales(localeId);
+//        }
+//        // if project id is given, only handle this project
+////        String projectId = jobDetail.getProject();
+////        if (!Strings.isNullOrEmpty(projectId)) {
+////            pullOptions.setProj(projectId);
+////            pushOptions.setProj(projectId);
+////        }
+//
+//    }
+
+    public ZanataSyncServiceImpl(HasSyncJobDetail jobDetail) {
+        String zanataUrl = jobDetail.getZanataURL();
+        String syncToZanataOption = jobDetail.getSyncOption();
+        String pushToZanataOption = Strings.emptyToNull(syncToZanataOption);
         String username = jobDetail.getZanataUsername();
         String apiKey = jobDetail.getZanataSecret();
-        String syncToZanataOption = jobDetail.getSyncToZanataOption();
-        String pushToZanataOption = Strings.emptyToNull(syncToZanataOption);
-        projectConfigs = getProjectConfigs(jobDetail.getProjectConfigs());
+        projectConfigs = getProjectConfigs(jobDetail.getZanataProjectConfigs());
 
-        String localeId = jobDetail.getLocaleId();
+        String localeId = jobDetail.getZanataLocaleIds();
         this.zanataUrl = zanataUrl;
         PullOptionsImpl pullOptions = new PullOptionsImpl();
         PushOptionsImpl pushOptions = new PushOptionsImpl();
@@ -99,7 +139,6 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
 //            pullOptions.setProj(projectId);
 //            pushOptions.setProj(projectId);
 //        }
-
     }
 
     private static Set<String> getProjectConfigs(String projectConfigs) {

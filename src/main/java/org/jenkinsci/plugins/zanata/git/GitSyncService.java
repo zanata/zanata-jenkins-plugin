@@ -31,7 +31,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import org.jenkinsci.plugins.zanata.cli.SyncJobDetail;
+import org.jenkinsci.plugins.zanata.cli.HasSyncJobDetail;
 import org.jenkinsci.plugins.zanata.exception.RepoSyncException;
 import org.jenkinsci.remoting.RoleChecker;
 import org.slf4j.Logger;
@@ -50,12 +50,12 @@ import hudson.remoting.VirtualChannel;
 public class GitSyncService implements RepoSyncService {
     private static final Logger log =
             LoggerFactory.getLogger(GitSyncService.class);
-    private final SyncJobDetail syncJobDetail;
+    private final HasSyncJobDetail syncJobDetail;
     private final org.jenkinsci.plugins.gitclient.Git git;
 
-    public GitSyncService(SyncJobDetail syncJobDetail,
-            Git git) {
-        this.syncJobDetail = syncJobDetail;
+
+    public GitSyncService(HasSyncJobDetail jobDetail, Git git) {
+        this.syncJobDetail = jobDetail;
         this.git = git;
     }
 
