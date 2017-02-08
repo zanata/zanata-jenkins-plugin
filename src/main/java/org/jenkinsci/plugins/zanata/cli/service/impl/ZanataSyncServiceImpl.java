@@ -59,7 +59,6 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
 
     private final PushServiceImpl pushService = new PushServiceImpl();
     private final PullServiceImpl pullService = new PullServiceImpl();
-    private final String zanataUrl;
     private final Set<String> projectConfigs;
 
 //    public ZanataSyncServiceImpl(SyncJobDetail jobDetail) {
@@ -111,7 +110,6 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
         projectConfigs = getProjectConfigs(jobDetail.getZanataProjectConfigs());
 
         String localeId = jobDetail.getZanataLocaleIds();
-        this.zanataUrl = zanataUrl;
         PullOptionsImpl pullOptions = new PullOptionsImpl();
         PushOptionsImpl pushOptions = new PushOptionsImpl();
         pullOptions.setInteractiveMode(false);
@@ -139,6 +137,8 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
 //            pullOptions.setProj(projectId);
 //            pushOptions.setProj(projectId);
 //        }
+        overrideURLIfSpecified(getPushOptions(), zanataUrl);
+        overrideURLIfSpecified(getPullOptions(), zanataUrl);
     }
 
     private static Set<String> getProjectConfigs(String projectConfigs) {
@@ -182,7 +182,6 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
 
     private void pushIfProjectIdMatchesConfig(String project, File config) {
         if (Strings.isNullOrEmpty(project) || Objects.equals(getPushOptions().getProj(), project)) {
-            overrideURLIfSpecified(getPushOptions(), zanataUrl);
             pushService.pushToZanata(getPushOptions());
         } else if (!Strings.isNullOrEmpty(project)) {
             log.warn(
@@ -237,7 +236,6 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
 
     private void pullIfProjectIdMatchesConfig(String project, File config) {
         if (Strings.isNullOrEmpty(project) || Objects.equals(getPushOptions().getProj(), project)) {
-            overrideURLIfSpecified(getPullOptions(), zanataUrl);
             pullService.pullFromZanata(getPullOptions());
         } else if (!Strings.isNullOrEmpty(project)) {
             log.warn(
