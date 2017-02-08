@@ -90,14 +90,15 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
         // Get the POST stream
         String body = IOUtils.toString(req.getInputStream(), DEFAULT_CHARSET);
         if (body.isEmpty()
-                || !req.getRequestURI().contains("/" + ZanataWebhookProjectProperty.DescriptorImpl.URL_PATH + "/")) {
+                || !req.getRequestURI().contains("/".concat(ZanataWebhookProjectProperty.DescriptorImpl.URL_PATH).concat("/"))) {
             exitWebHook(new WebhookResult(404, "No payload or URI contains invalid entries."));
             return;
         }
 
         String contentType = req.getContentType();
-        if (contentType != null && contentType.startsWith("application/json")) {
-            body = URLDecoder.decode(body, DEFAULT_CHARSET);
+        if (contentType == null || !contentType.startsWith("application/json")) {
+            exitWebHook(new WebhookResult(415, "Only Accept JSON payload."));
+            return;
         }
 
         JSONObject payload = JSONObject.fromObject(body);
@@ -117,7 +118,8 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
                                 .getProperty(
                                         ZanataWebhookProjectProperty.class);
                 if (property != null) {
-                    secretDefinedInJob = property.getZanataWebhookSecret();
+                    secretDefinedInJob = property.getZanataWebhookSecret()
+                            .getPlainText();
                 }
             }
 
@@ -139,7 +141,7 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
         if (noWebhookSecret(secretDefinedInJob, webhookSHA)
                 || webhookSHAMatchesSecret(secretDefinedInJob, payload, req.getRequestURI(),
                         webhookSHA)) {
-            Processor payloadProcessor = new Processor(foundJob.get());
+            Processor payloadProcessor = new Processor(Jenkins.getInstance(), foundJob.get());
             WebhookResult result =
                     payloadProcessor.triggerJobs(jobName, req.getRemoteHost(), payload);
             exitWebHook(result);

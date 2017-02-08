@@ -48,6 +48,6 @@ public class ZanataWebhookCrumbExclusion extends CrumbExclusion {
     }
 
     public String getExclusionPath() {
-        return "/" + ZanataWebhookProjectProperty.DescriptorImpl.URL_PATH + "/";
+        return "/".concat(ZanataWebhookProjectProperty.DescriptorImpl.URL_PATH).concat("/");
     }
 }

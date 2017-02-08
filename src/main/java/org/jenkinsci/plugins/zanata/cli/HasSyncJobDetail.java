@@ -64,10 +64,13 @@ public interface HasSyncJobDetail extends Serializable {
         if (Strings.isNullOrEmpty(secret)) {
             return secret;
         }
+        if (secret.length() < 3) {
+            return "*";
+        }
         if (secret.length() < 5) {
             // when secret is too short, we only show the first and last character
-            return secret.charAt(0) + "*" + secret.substring(secret.length() - 2);
+            return secret.charAt(0) + "*" + secret.substring(secret.length() - 1);
         }
-        return StringUtils.abbreviateMiddle(secret, "*", 5);
+        return StringUtils.abbreviateMiddle(secret, "*", 4);
     }
 }

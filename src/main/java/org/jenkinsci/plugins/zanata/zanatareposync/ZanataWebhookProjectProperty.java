@@ -34,6 +34,7 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
@@ -44,16 +45,16 @@ public class ZanataWebhookProjectProperty extends JobProperty<Job<?, ?>> {
     private static final Logger log =
             LoggerFactory.getLogger(ZanataWebhookProjectProperty.class);
 
-    private final String zanataWebhookSecret;
+    private final Secret zanataWebhookSecret;
     private final String URLForWebhook;
 
     @DataBoundConstructor
-    public ZanataWebhookProjectProperty(String zanataWebhookSecret, String URLForWebhook) {
+    public ZanataWebhookProjectProperty(Secret zanataWebhookSecret, String URLForWebhook) {
         this.zanataWebhookSecret = zanataWebhookSecret;
         this.URLForWebhook = URLForWebhook;
     }
 
-    public String getZanataWebhookSecret() {
+    public Secret getZanataWebhookSecret() {
         return this.zanataWebhookSecret;
     }
 

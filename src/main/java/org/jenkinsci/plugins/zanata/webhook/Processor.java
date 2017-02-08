@@ -40,17 +40,18 @@ import net.sf.json.JSONObject;
  */
 public class Processor {
     private static final Logger log = LoggerFactory.getLogger(Processor.class);
+    private final Jenkins jenkins;
     private final Job job;
 
-    public Processor(Job job) {
+    public Processor(Jenkins instance, Job job) {
+        this.jenkins = instance;
         this.job = job;
     }
 
     public WebhookResult triggerJobs(String jobName, String remoteHost,
             JSONObject payload) {
 
-        Jenkins instance = Jenkins.getInstance();
-        if (instance == null) {
+        if (jenkins == null || jenkins.isTerminating()) {
             return new WebhookResult(200, "Jenkins is not running");
         }
         if (!(job instanceof BuildableItem)) {
