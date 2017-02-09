@@ -21,7 +21,6 @@
 package org.jenkinsci.plugins.zanata.zanatareposync;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.Optional;
 
 import org.acegisecurity.context.SecurityContext;
@@ -40,6 +39,7 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
 import hudson.security.ACL;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
@@ -103,7 +103,7 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
 
         JSONObject payload = JSONObject.fromObject(body);
 
-        String secretDefinedInJob = null;
+        Secret secretDefinedInJob = null;
         SecurityContext saveCtx = SecurityContextHolder.getContext();
 
         Optional<Job> foundJob;
@@ -118,8 +118,7 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
                                 .getProperty(
                                         ZanataWebhookProjectProperty.class);
                 if (property != null) {
-                    secretDefinedInJob = property.getZanataWebhookSecret()
-                            .getPlainText();
+                    secretDefinedInJob = property.getZanataWebhookSecret();
                 }
             }
 
@@ -151,25 +150,31 @@ public class ZanataWebhookJobTrigger implements UnprotectedRootAction {
 
     }
 
-    private static boolean noWebhookSecret(String secretDefinedInJob,
+    private static boolean noWebhookSecret(Secret secretDefinedInJob,
             String webhookSHA) {
-        return Strings.isNullOrEmpty(secretDefinedInJob)
+        return isNullOrEmpty(secretDefinedInJob)
                 && Strings.isNullOrEmpty(webhookSHA);
     }
 
-    private static boolean webhookSHAMatchesSecret(String secretDefinedInJob,
+    private static boolean isNullOrEmpty(Secret secretDefinedInJob) {
+        return secretDefinedInJob == null
+                || Strings.isNullOrEmpty(secretDefinedInJob.getPlainText());
+    }
+
+    private static boolean webhookSHAMatchesSecret(Secret secretDefinedInJob,
             JSONObject jsonObject, String requestURI, String webhookSHA) {
-        if (Strings.isNullOrEmpty(secretDefinedInJob)) {
+        if (isNullOrEmpty(secretDefinedInJob)) {
             return true;
         }
         String valueToDigest = jsonObject.toString() + requestURI;
         try {
+            String secretText = secretDefinedInJob.getPlainText();
             String expectedHash = HmacUtil
-                    .hmacSha1(secretDefinedInJob, HmacUtil
-                            .hmacSha1(secretDefinedInJob, valueToDigest));
+                    .hmacSha1(secretText, HmacUtil
+                            .hmacSha1(secretText, valueToDigest));
             return expectedHash.equals(webhookSHA);
         } catch (IllegalArgumentException e) {
-            log.error("Unable to generate hmac sha1 for {} {}", secretDefinedInJob, valueToDigest);
+            log.error("Unable to generate hmac sha1");
             throw new IllegalArgumentException(e);
         }
     }
