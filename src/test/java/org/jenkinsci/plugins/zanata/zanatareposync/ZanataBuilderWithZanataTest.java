@@ -35,9 +35,12 @@ public class ZanataBuilderWithZanataTest extends WithJenkins {
             new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
 
     private String zanataXMLContent;
+    private String credentialId;
+    private String username;
+    private String password;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         int port = wireMockRule.port();
         zanataXMLContent =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
@@ -47,15 +50,14 @@ public class ZanataBuilderWithZanataTest extends WithJenkins {
                         + "  <project-version>master</project-version>"
                         + "  <project-type>properties</project-type>"
                         + "</config>";
+        username = "user";
+        password = "s3cr3t";
+        credentialId = "zanata_cred";
+        addUsernamePasswordCredential(username, password, credentialId, "");
     }
 
     @Test(timeout = FIVE_MINUTES)
     public void jobCanPushToZanata() throws Exception {
-        String username = "user";
-        String password = "s3cr3t";
-        String credentialId = "zanata_cred";
-        addUsernamePasswordCredential(username, password, credentialId, "");
-
         setupPushToZanataStub(username, password);
 
         FreeStyleProject project = j.createFreeStyleProject();
@@ -127,5 +129,66 @@ public class ZanataBuilderWithZanataTest extends WithJenkins {
                                 .withHeader("Content-Type", "application/xml")
                                 .withBody(readFileAsString(
                                         "zanata-stub-output/getAsyncPushStatus.xml"))));
+    }
+
+    @Test(timeout = FIVE_MINUTES)
+    public void jobCanPullFromZanata() throws Exception {
+        setupPullFromZanataStub(username, password);
+        FreeStyleProject project = j.createFreeStyleProject();
+
+        // Set workspace up as if we have done a SCM checkout
+        project.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+                    BuildListener listener)
+                    throws InterruptedException, IOException {
+                build.getWorkspace().child("zanata.xml").write(zanataXMLContent,
+                        "UTF-8");
+                build.getWorkspace().child("messages.properties")
+                        .write("greeting=Hello, World", "UTF-8");
+                return true;
+            }
+        });
+        ZanataBuilder builder = new ZanataBuilder(credentialId);
+        builder.setPushToZanata(false);
+        builder.setPullFromZanata(true);
+        builder.setSyncOption("source");
+        project.getBuildersList().add(builder);
+
+        FreeStyleBuild build = project.scheduleBuild2(0).get();
+        assertThat(build.getResult()).isEqualTo(Result.SUCCESS);
+
+    }
+
+    private void setupPullFromZanataStub(String username, String password) {
+        wireMockRule.givenThat(get(urlPathMatching(
+                "/rest/projects/p/test-project/iterations/i/master/locales"))
+                .withHeader("X-Auth-User", equalTo(username))
+                .withHeader("X-Auth-Token", equalTo(password))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/xml")
+                        .withBody(readFileAsString(
+                                "zanata-stub-output/locales.xml"))));
+        wireMockRule.givenThat(get(urlPathEqualTo(
+                "/rest/projects/p/test-project/iterations/i/master/r"))
+                .withHeader("X-Auth-User", equalTo(username))
+                .withHeader("X-Auth-Token", equalTo(password))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/xml")
+                        .withBody(readFileAsString(
+                                "zanata-stub-output/documentNames.xml"))));
+        wireMockRule.givenThat(get(urlPathEqualTo("/rest/projects/p/test-project/iterations/i/master/r/messages/translations/zh-Hans"))
+                .withQueryParam("ext", equalTo("comment"))
+                .withQueryParam("skeletons", equalTo("false"))
+                .withHeader("X-Auth-User", equalTo(username))
+                .withHeader("X-Auth-Token", equalTo(password))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/xml")
+                        .withBody(readFileAsString("zanata-stub-output/pullDocuments.xml"))
+                )
+
+
+        );
+
+
     }
 }
