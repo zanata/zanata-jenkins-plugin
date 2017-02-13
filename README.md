@@ -4,6 +4,9 @@ Yu Shao yu.shao.gm@gmail.com
 
 This plugin adds the zanata configuration into Jenkins.
 
+Plugin home page: https://wiki.jenkins-ci.org/display/JENKINS/Zanata+Plugin
+
+
 You need to install zanata client on the Jenkins server:
 http://docs.zanata.org/projects/zanata-client/en/release/
 
