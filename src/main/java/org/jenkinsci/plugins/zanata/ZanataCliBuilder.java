@@ -142,7 +142,7 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Git to Zanata sync is enabled, running command:");
             listener.getLogger().println(commandG2Z + "\n");
 
-            if  (runShellCommandInBuild(commandG2Z  + " --username $ZANATA_USERNAME --key $ZANATA_APIKEY", listener, build, workspace)){
+            if  (runShellCommandInBuild(commandG2Z, listener, build, workspace)){
                 listener.getLogger().println("Git to Zanata sync finished.\n");
             }
 
@@ -155,7 +155,7 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println("Zanata to Git sync is enabled, running command:");
             listener.getLogger().println(commandZ2G + "\n");
 
-            if  (runShellCommandInBuild(commandZ2G  + " --username $ZANATA_USERNAME --key $ZANATA_APIKEY", listener, build, workspace)){
+            if  (runShellCommandInBuild(commandZ2G, listener, build, workspace)){
                 listener.getLogger().println("Zanata to Git sync finished.\n");
             }
          };
