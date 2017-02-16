@@ -28,16 +28,16 @@ import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Util;
+import hudson.model.Computer;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
+import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
-import hudson.model.Build;
 import hudson.model.TaskListener;
-import hudson.model.*;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.util.ListBoxModel;
@@ -45,21 +45,15 @@ import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.zanata.cli.RunAsCommand;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.Writer;
-import java.io.*;
-import java.util.*;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -69,17 +63,18 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import com.google.common.base.Strings;
 import hudson.EnvVars;
-import hudson.Launcher.*;
-import hudson.Proc;
 
 
 public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
 
+    // FIXME projFile is not used in script template
     private final String projFile;
     private final String zanataCredentialsId;
     private final boolean syncG2zanata;
     private final boolean syncZ2git;
+    private String extraPathEntries;
 
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
@@ -90,6 +85,13 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
         this.syncZ2git = syncZ2git;
         this.zanataCredentialsId = zanataCredentialsId;
     }
+
+    // TODO add validator for this field
+    @DataBoundSetter
+    public void setExtraPathEntries(String extraPathEntries) {
+        this.extraPathEntries = extraPathEntries;
+    }
+
 
     /**
      * We'll use this from the {@code config.jelly}.
@@ -109,6 +111,10 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
 
     public String getZanataCredentialsId() {
         return zanataCredentialsId;
+    }
+
+    public String getExtraPathEntries() {
+        return extraPathEntries;
     }
 
     @Override
@@ -133,30 +139,52 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
         String username = usernameCredentials.getUsername();
 
         EnvVars envs = build.getEnvironment(listener);
+        // TODO this is a hack but seems to be the only way to make the script work
+        // system path will include usual /usr/bin etc so that 'find' command is available
+        listener.getLogger().println("before adding system path:" + envs.get("PATH"));
+        envs.override("PATH+", System.getenv("PATH"));
+        listener.getLogger().println("after adding system PATH:" + envs.get("PATH"));
+
+
+        // build.getEnvironment(listener) doesn't seem to get current node's environment.
+        // This will work and inherit the global JAVA_HOME env
+        if (build.getExecutor() != null) {
+            Computer owner = build.getExecutor().getOwner();
+            EnvVars envForNode = owner.buildEnvironment(listener);
+            envs.putAll(envForNode);
+        }
+
         envs.put("ZANATA_USERNAME", username);
         envs.put("ZANATA_APIKEY", apiKey);
 
-         if (syncG2zanata) {
+
+        if (syncG2zanata) {
             commandG2Z = getDescriptor().getCommandG2Z();
 
             listener.getLogger().println("Git to Zanata sync is enabled, running command:");
             listener.getLogger().println(commandG2Z + "\n");
 
-            if  (runShellCommandInBuild(commandG2Z, listener, build, workspace)){
+            if  (runShellCommandInBuild(commandG2Z, listener, launcher, build, workspace, envs)){
                 listener.getLogger().println("Git to Zanata sync finished.\n");
+            } else {
+                throw new RuntimeException("Command failed:" + commandG2Z);
             }
 
          };
 
 
          if (syncZ2git) {
+             // FIXME these two commands are coming from global configuration. If you upload the plugin and haven't gone to global config page then hit save, these two value will be null
             commandZ2G = getDescriptor().getCommandZ2G();
 
             listener.getLogger().println("Zanata to Git sync is enabled, running command:");
             listener.getLogger().println(commandZ2G + "\n");
 
-            if  (runShellCommandInBuild(commandZ2G, listener, build, workspace)){
+            if  (runShellCommandInBuild(commandZ2G, listener, launcher, build, workspace,
+                    envs)){
                 listener.getLogger().println("Zanata to Git sync finished.\n");
+            } else {
+                throw new RuntimeException("Command failed:" + commandZ2G);
             }
          };
 
@@ -168,52 +196,33 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
          */
     }
 
-    private boolean runShellCommandInBuild(String command, TaskListener listener, Run<?,?> builder, FilePath workspace){
+    private boolean runShellCommandInBuild(String command,
+            TaskListener listener, Launcher launcher, Run<?, ?> builder,
+            FilePath workspace, EnvVars envs){
 
          try {
 
-             EnvVars jenkinsEnvs = builder.getEnvironment(listener);
-             Map<String, String> sysEnvs = System.getenv();
+             String extraPathEntries = getExtraPathEntries();
 
-             Map<String, String> allEnvs = new HashMap<String, String> ();
-             allEnvs.putAll(sysEnvs);
-             allEnvs.putAll(jenkinsEnvs);
+             // FIXME to be safe, we should not override PATH. We should change our script template to use environment variable instead of expecting zanata-cli on PATH
+             if (!Strings.isNullOrEmpty(extraPathEntries)) {
+                 listener.getLogger().println("Current PATH:" + envs.get("PATH"));
+                 listener.getLogger().println("Extra PATH:" + extraPathEntries);
+                 // Override paths to prevent JENKINS-20560
+                 envs.override("PATH+", extraPathEntries);
+             }
 
              listener.getLogger().println("workspace: " + workspace.toURI());
 
-             Process pg = Runtime.getRuntime().exec(new String[]{"bash","-c",command},
-                                                    allEnvs.toString().split(", "),
-                                                    new File(workspace.toURI()));
 
+             RunAsCommand runAsCommand = new RunAsCommand(envs);
+             // FIXME we are referring to bash directly. Jenkins has an abstraction here (admin can configure and override shell to use). We probably need to use sh. Need to check the Jenkins code to find out.
+             boolean result = runAsCommand.run(workspace, listener, launcher,
+                     new ArgumentListBuilder()
+                             .add("bash").add("-c")
+                             .add(command));
 
-             try (BufferedReader in = new BufferedReader(
-                                     new InputStreamReader(pg.getInputStream(),"UTF8"));) {
-                 String line = null;
-                 while ((line = in.readLine()) != null)
-                     { System.out.println(line);
-                       listener.getLogger().println(line);
-                 }
-                 in.close();
-             } catch (IOException e) {
-                 listener.getLogger().println("Can't generate output of command:" + command);
-                 e.printStackTrace();
-                 return false;
-             }
-             try (BufferedReader in = new BufferedReader(
-                                 new InputStreamReader(pg.getErrorStream(),"UTF8"));) {
-                 String line = null;
-                 while ((line = in.readLine()) != null)
-                     { System.out.println(line);
-                       listener.getLogger().println(line);
-                 }
-                 in.close();
-             } catch (IOException e) {
-                 listener.getLogger().println("Can't generate error message of command:" + command);
-                 e.printStackTrace();
-                 return false;
-             }
-             pg.waitFor();
-             listener.getLogger().println("Run command return:  " + Integer.toString(pg.exitValue()));
+             return result;
 
          } catch (IOException e) {
              listener.getLogger().println("Can't run command:" + command);
@@ -225,7 +234,6 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
              return false;
          }
 
-        return true;
     }
 
     // Overridden for better type safety.
@@ -246,6 +254,28 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+        public static final String defaultGitToZanataScript =
+                "find . -type f -not -path \"*/target/*\" -name 'zanata.xml' \\\n" +
+                "  -execdir pwd \\; \\\n" +
+                "  -execdir ls \\; \\\n" +
+                "  -execdir echo 'Running zanata-cli -B stats\\n' \\; \\\n" +
+                "  -execdir zanata-cli -B stats --username $ZANATA_USERNAME --key $ZANATA_APIKEY \\; \\\n" +
+                "  -execdir echo 'Running zanata-cli -B push\\n' \\; \\\n" +
+                "  -execdir zanata-cli -B push --username $ZANATA_USERNAME --key $ZANATA_APIKEY \\; \\\n" +
+                "  -execdir echo 'Running zanata-cli -B pull\\n' \\; \\\n" +
+                "  -execdir zanata-cli -B pull --username $ZANATA_USERNAME --key $ZANATA_APIKEY \\;";
+
+        public static final String defaultZanataToGitScript =
+                "find . -type f -not -path \"*/target/*\" -name 'zanata.xml' \\" +
+                "  -execdir echo \"=== Commiting new translation $BUILD_TAG...\\n\" \\; \\\n" +
+                "  -execdir pwd \\; \\\n" +
+                "  -execdir ls \\; \\\n" +
+                "  -execdir echo '=== Git add...\\n' \\; \\\n" +
+                "  -execdir git add . \\; \\\n" +
+                "  -execdir echo '=== Git commit ...\\n' \\; \\\n" +
+                "  -execdir git commit -m \"$BUILD_TAG\" \\; \\\n" +
+                "  -execdir echo \"=== Finished commit preparation - $BUILD_TAG.\\n\" \\;";
+
         private String commandG2Z;
         private String commandZ2G;
 
@@ -343,7 +373,7 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
          */
         @Override
         public String getDisplayName() {
-            return "Zanata Localization Sync";
+            return "Zanata Sync via CLI";
         }
 
         @Override
