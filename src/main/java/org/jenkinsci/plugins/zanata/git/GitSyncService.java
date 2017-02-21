@@ -23,6 +23,7 @@ package org.jenkinsci.plugins.zanata.git;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Set;
 
 import org.eclipse.jgit.api.Status;
@@ -60,14 +61,14 @@ public class GitSyncService implements RepoSyncService {
     }
 
     @Override
-    public void syncTranslationToRepo(Path workingDir) {
+    public boolean syncTranslationToRepo(Path workingDir) {
 
         try {
             GitClient gitClient =
                     git.in(workingDir.toFile()).using("jgit").getClient();
             if (!gitClient.hasGitRepo()) {
                 log.warn("no git repository found. Skip git commit step");
-                return;
+                return false;
             }
             if (log.isDebugEnabled()) {
                 gitClient.withRepository(
@@ -78,9 +79,9 @@ public class GitSyncService implements RepoSyncService {
 
             }
 
-            gitClient.getWorkTree().act(new FilePath.FileCallable<Void>() {
+            return gitClient.getWorkTree().act(new FilePath.FileCallable<Boolean>() {
                 @Override
-                public Void invoke(File f, VirtualChannel channel)
+                public Boolean invoke(File f, VirtualChannel channel)
                         throws IOException, InterruptedException {
                     try (org.eclipse.jgit.api.Git jgit = org.eclipse.jgit.api.Git.open(f)) {
                         StatusCommand statusCommand = jgit.status();
@@ -116,7 +117,7 @@ public class GitSyncService implements RepoSyncService {
                         throw new RepoSyncException("error committing", gitException);
                     }
 
-                    return null;
+                    return true;
                 }
 
                 @Override

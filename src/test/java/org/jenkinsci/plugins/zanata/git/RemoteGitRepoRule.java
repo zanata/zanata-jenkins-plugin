@@ -38,7 +38,7 @@ public class RemoteGitRepoRule extends TemporaryFolder {
         try {
             Git.init().setDirectory(remoteRepo).call();
         } catch (GitAPIException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         commitFiles("init commit");
     }
@@ -51,7 +51,7 @@ public class RemoteGitRepoRule extends TemporaryFolder {
             writer.newLine();
             writer.flush();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -62,7 +62,7 @@ public class RemoteGitRepoRule extends TemporaryFolder {
             git.commit().setCommitter("JUnit", "junit@example.com")
                     .setMessage(message).call();
         } catch (GitAPIException | IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -73,7 +73,7 @@ public class RemoteGitRepoRule extends TemporaryFolder {
             return ImmutableList.copyOf(commits).stream().map(
                     RevCommit::getFullMessage).collect(Collectors.toList());
         } catch (IOException | GitAPIException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

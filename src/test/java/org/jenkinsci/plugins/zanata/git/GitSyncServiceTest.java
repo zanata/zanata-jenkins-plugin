@@ -57,8 +57,9 @@ public class GitSyncServiceTest {
     public void testCommit() {
         Path gitRepo = gitRepoRule.getRemoteRepoPath();
         gitRepoRule.addFile("newFile", "this should be committed");
-        syncService.syncTranslationToRepo(gitRepo);
+        boolean committed = syncService.syncTranslationToRepo(gitRepo);
 
+        assertThat(committed).isTrue().as("change is committed");
         assertThat(gitRepoRule.getCommitMessages())
                 .contains("Zanata Sync job triggered by " + zanataUsername);
     }
@@ -68,8 +69,9 @@ public class GitSyncServiceTest {
         File folder = temporaryFolder.newFolder();
         Files.write(Paths.get(folder.getAbsolutePath(), "newFile"),
                 Lists.newArrayList("text"), Charsets.UTF_8);
-        syncService.syncTranslationToRepo(folder.toPath());
+        boolean committed = syncService.syncTranslationToRepo(folder.toPath());
 
+        assertThat(committed).isFalse().as("change is not committed");
         // no git exception thrown
     }
 }

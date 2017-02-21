@@ -27,8 +27,14 @@ import org.jenkinsci.plugins.zanata.exception.RepoSyncException;
 
 public interface RepoSyncService extends Serializable {
 
-    void syncTranslationToRepo(Path path)
-            throws RepoSyncException;
+    /**
+     *
+     * @param path
+     *            the workspace path
+     * @return true if the translation is commited to the SCM repo
+     * @throws RepoSyncException
+     */
+    boolean syncTranslationToRepo(Path path) throws RepoSyncException;
 
     default String commitAuthorName() {
         return "Zanata Sync";
@@ -39,8 +45,7 @@ public interface RepoSyncService extends Serializable {
     }
 
     default String commitMessage(String zanataUsername) {
-        return String
-                .format("Zanata Sync job triggered by %s", zanataUsername);
+        return String.format("Zanata Sync job triggered by %s", zanataUsername);
     }
 
 }
