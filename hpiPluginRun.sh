@@ -11,11 +11,11 @@ while getopts ":dH" opt; do
     H)
       echo "========   HELP   ========="
       echo "-d  : run mavenDebug instead"
-      echo "-H  : display help"
+      echo "-h  : display help"
       exit
       ;;
     \?)
-      echo "Invalid option: -${OPTARG}. Use -H for help" >&2
+      echo "Invalid option: -${OPTARG}. Use -h for help" >&2
       exit 1
       ;;
   esac

@@ -25,19 +25,22 @@ hpiPluginRun.sh
 ### How to use it as normal Jenkins job
 First you will need to configure Zanata credentials in Jenkins Credentials view (plus e.g. github credential if you want to push commit).
 Then you will have two options to use Zanata client to push source to and/or pull translation from Zanata server.
-1. install Zanata CLI on Jenkins node and use scripting to invoke it
+
+1. use the plugin as a build step
+    - in you job configuration, you can choose 'Zanata Sync' as a build step and fill in all the information in the UI
+    
+2. install Zanata CLI on Jenkins node and use scripting to invoke it
     - go to Jenkins global tools configuration view and there will be a Zanata CLI section for you to configure
     - in your job configuration, you can choose to install the configured CLI under Build Environment section
     - choose a shell builder step and run Zanata CLI from there
-2. use the plugin as a build step
-    - in you job configuration, you can choose 'Zanata Sync' as a build step and fill in all the information in the UI
     
-Option 1 has the advantage of being flexible. You can use all the features and options [Zanata CLI](http://zanata-client.readthedocs.io/en/release/).
-The disadvantage is, you will need to know how to use Zanata CLI. You also need to manually manage commit in your shell script.
-
-Option 2 has the advantage of being installation free and simple to use. It will work on all type of nodes.
+Option 1 has the advantage of being installation free and simple to use. It will work on all type of jenkins slave nodes.
 It will commit translation after pull automatically if you use Git as SCM. 
-Disadvantage being the java classes it used is from a fixed version of Zanata CLI and you can't do much customization for push and pull.
+Disadvantage being that it uses only the included version of Zanata CLI java classes. and you can't do much customization for push and pull.
+
+Option 2 has the advantage of being flexible. You can use all the features and options of [Zanata CLI](http://zanata-client.readthedocs.io/en/release/).
+The disadvantage is, you will need to know how to use Zanata CLI. You also need to manually manage source control in your shell script.
+
 
 ### How to use it in pipeline build
 
@@ -79,7 +82,7 @@ node {
 
 ```
 
-### Alternative build step (experimental)
+### Alternative build step (experimental and subject to change without notice)
 
 Yu Shao yu.shao.gm@gmail.com
 
