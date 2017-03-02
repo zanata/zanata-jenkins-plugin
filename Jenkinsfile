@@ -36,10 +36,6 @@ try {
           def testReports = 'target/surefire-reports/TEST-*.xml'
           def jarFiles = 'target/*.jar'
           def hpiFiles = 'target/*.hpi'
-          // globstar might failed to match
-          sh "find . -path \"*/${testReports}\" -delete"
-          sh "find . -path \"*/${jarFiles}\" -delete"
-          sh "find . -path \"*/${hpiFiles}\" -delete"
 
           withEnv(["MVN_HOME=${ tool name: 'mvn', type: 'hudson.tasks.Maven$MavenInstallation' }"]) {
             sh '$MVN_HOME/bin/mvn clean verify'
@@ -51,7 +47,7 @@ try {
             testResults: "**/${testReports}"
 
           // notify if compile+unit test successful
-          notify.testResults("UNIT")
+          notify.testResults(null)
           archive "**/${jarFiles},**/${hpiFiles}"
         }
 
