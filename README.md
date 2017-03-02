@@ -1,4 +1,6 @@
 ### A Jenkins plugin to synchronize localization resources between SCM repository and Zanata
+
+Plugin home page: https://wiki.jenkins-ci.org/display/JENKINS/Zanata+Plugin
  
 [Zanata](https://zanata.org) is an open source translation management platform. 
 
