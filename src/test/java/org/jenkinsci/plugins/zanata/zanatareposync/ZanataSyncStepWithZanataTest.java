@@ -28,7 +28,7 @@ import hudson.model.Result;
  * @author Patrick Huang
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
-public class ZanataBuilderWithZanataTest extends WithJenkins {
+public class ZanataSyncStepWithZanataTest extends WithJenkins {
     private static final int FIVE_MINUTES = 1000 * 60 * 5;
     @Rule
     public WireMockRule wireMockRule =
@@ -74,7 +74,7 @@ public class ZanataBuilderWithZanataTest extends WithJenkins {
                 return true;
             }
         });
-        ZanataBuilder builder = new ZanataBuilder(credentialId);
+        ZanataSyncStep builder = new ZanataSyncStep(credentialId);
         builder.setPushToZanata(true);
         builder.setPullFromZanata(false);
         builder.setSyncOption("source");
@@ -148,7 +148,7 @@ public class ZanataBuilderWithZanataTest extends WithJenkins {
                 return true;
             }
         });
-        ZanataBuilder builder = new ZanataBuilder(credentialId);
+        ZanataSyncStep builder = new ZanataSyncStep(credentialId);
         builder.setPushToZanata(false);
         builder.setPullFromZanata(true);
         builder.setSyncOption("source");

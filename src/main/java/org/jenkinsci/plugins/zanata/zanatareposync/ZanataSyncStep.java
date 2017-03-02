@@ -19,7 +19,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -54,17 +52,16 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
-import net.sf.json.JSONObject;
 
 /**
  * Zanata builder that uses the bundled zanata client commands classes.
  *
  * @author Patrick Huang <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
-public class ZanataBuilder extends Builder implements SimpleBuildStep,
+public class ZanataSyncStep extends Builder implements SimpleBuildStep,
         HasSyncJobDetail {
     private static final Logger log =
-            LoggerFactory.getLogger(ZanataBuilder.class);
+            LoggerFactory.getLogger(ZanataSyncStep.class);
 
     private String zanataURL;
     private String syncOption;
@@ -78,7 +75,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep,
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ZanataBuilder(String zanataCredentialsId) {
+    public ZanataSyncStep(String zanataCredentialsId) {
         this.zanataURL = null;
         this.zanataCredentialsId = zanataCredentialsId;
         this.syncOption = "source";
@@ -271,7 +268,7 @@ public class ZanataBuilder extends Builder implements SimpleBuildStep,
     }
 
     /**
-     * Descriptor for {@link ZanataBuilder}. Used as a singleton.
+     * Descriptor for {@link ZanataSyncStep}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      *
      * <p>

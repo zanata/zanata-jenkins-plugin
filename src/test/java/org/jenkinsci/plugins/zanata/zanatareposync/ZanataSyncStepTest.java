@@ -16,13 +16,13 @@ import hudson.util.ListBoxModel;
  * This test class is for anything requiring a running Jenkins instance but not
  * a Zanata instance.
  *
- * @see ZanataBuilderBasicsTest
- * @see ZanataBuilderWithZanataTest
+ * @see ZanataSyncStepBasicsTest
+ * @see ZanataSyncStepWithZanataTest
  *
  * @author Patrick Huang
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
-public class ZanataBuilderTest extends WithJenkins {
+public class ZanataSyncStepTest extends WithJenkins {
 
     @Test
     public void testCredentialsOptions() throws IOException {
@@ -33,8 +33,8 @@ public class ZanataBuilderTest extends WithJenkins {
         addUsernamePasswordCredential(username, password, credentialId,
                 description);
 
-        ZanataBuilder.DescriptorImpl descriptor = j.jenkins
-                .getDescriptorByType(ZanataBuilder.DescriptorImpl.class);
+        ZanataSyncStep.DescriptorImpl descriptor = j.jenkins
+                .getDescriptorByType(ZanataSyncStep.DescriptorImpl.class);
 
         FreeStyleProject p = j.createFreeStyleProject();
         ListBoxModel listBox = descriptor.doFillZanataCredentialsIdItems(p,
@@ -59,7 +59,7 @@ public class ZanataBuilderTest extends WithJenkins {
         FreeStyleProject p = j.createFreeStyleProject();
 
         // set some properties
-        ZanataBuilder before = new ZanataBuilder(credentialId);
+        ZanataSyncStep before = new ZanataSyncStep(credentialId);
         before.setPullFromZanata(true);
         before.setPushToZanata(false);
         before.setSyncOption("both");
@@ -72,7 +72,7 @@ public class ZanataBuilderTest extends WithJenkins {
         j.submit(j.createWebClient().getPage(p, "configure")
                 .getFormByName("config"));
 
-        ZanataBuilder after = p.getBuildersList().get(ZanataBuilder.class);
+        ZanataSyncStep after = p.getBuildersList().get(ZanataSyncStep.class);
 
         j.assertEqualBeans(before, after,
                 "pullFromZanata,pushToZanata,syncOption,zanataLocaleIds,zanataProjectConfigs,zanataURL,zanataCredentialsId");
@@ -82,7 +82,7 @@ public class ZanataBuilderTest extends WithJenkins {
     public void jobWillAbortIfCredentialIdNotFound() throws Exception {
         FreeStyleProject project = j.createFreeStyleProject();
         project.getBuildersList()
-                .add(new ZanataBuilder("NotExistCredentialId"));
+                .add(new ZanataSyncStep("NotExistCredentialId"));
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         List<String> logs = build.getLog(100);
         assertThat(build.getResult()).isEqualTo(Result.FAILURE);
