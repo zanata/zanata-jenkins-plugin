@@ -47,15 +47,12 @@ try {
 
           // notify if compile+unit test successful
           notify.testResults(null)
-          archive "**/${hpiFiles}"
+          archive "**/${hpiFiles},**/target/site/jacoco/**"
         }
 
         stage('Report') {
-          step([$class: 'JacocoPublisher'])
-        }
-
-        stage('Stash') {
-          stash name: 'workspace', includes: '**'
+          // this is not working properly yet
+          // step([$class: 'JacocoPublisher'])
         }
       }
     }
