@@ -47,7 +47,11 @@ try {
 
           // notify if compile+unit test successful
           notify.testResults(null)
-          archive "**/${hpiFiles},**/target/site/jacoco/**"
+          archive "**/${hpiFiles}"
+        }
+
+        stage('Report') {
+          step([$class: 'JacocoPublisher'])
         }
 
         stage('Stash') {
