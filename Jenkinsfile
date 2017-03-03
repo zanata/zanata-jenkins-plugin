@@ -34,7 +34,6 @@ try {
           info.printNode()
           info.printEnv()
           def testReports = 'target/surefire-reports/TEST-*.xml'
-          def jarFiles = 'target/*.jar'
           def hpiFiles = 'target/*.hpi'
 
           withEnv(["MVN_HOME=${ tool name: 'mvn', type: 'hudson.tasks.Maven$MavenInstallation' }"]) {
@@ -42,16 +41,16 @@ try {
           }
 
           junit allowEmptyResults: true,
-            keepLongStdio: true,
+            keepLongStdio: false,
             testDataPublishers: [[$class: 'StabilityTestDataPublisher']],
             testResults: "**/${testReports}"
 
           // notify if compile+unit test successful
           notify.testResults(null)
-          archive "**/${jarFiles},**/${hpiFiles}"
+          archive "**/${hpiFiles},**/target/site/jacoco/**"
         }
 
-        stage('stash') {
+        stage('Stash') {
           stash name: 'workspace', includes: '**'
         }
       }
@@ -60,16 +59,8 @@ try {
 } catch (e) {
   notify.failed()
   junit allowEmptyResults: true,
-      keepLongStdio: true,
+      keepLongStdio: false,
       testDataPublishers: [[$class: 'StabilityTestDataPublisher']],
       testResults: "**/${testReports}"
   throw e
-}
-
-void archiveTestFilesIfUnstable() {
-  // if tests have failed currentBuild.result will be 'UNSTABLE'
-  if (currentBuild.result != null) {
-    archive(
-        includes: '*/target/**/*.log,**/target/site/jacoco/**')
-  }
 }
