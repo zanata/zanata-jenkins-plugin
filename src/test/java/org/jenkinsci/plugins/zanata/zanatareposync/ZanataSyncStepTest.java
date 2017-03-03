@@ -1,15 +1,20 @@
 package org.jenkinsci.plugins.zanata.zanatareposync;
 
+import static hudson.model.Item.EXTENDED_READ;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 /**
@@ -23,6 +28,30 @@ import hudson.util.ListBoxModel;
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
 public class ZanataSyncStepTest extends WithJenkins {
+
+    @Test
+    public void testCheckCredentialId() throws IOException {
+        ZanataSyncStep.DescriptorImpl descriptor =
+                new ZanataSyncStep.DescriptorImpl();
+        AbstractProject context = Mockito.mock(AbstractProject.class);
+        when(context.hasPermission(EXTENDED_READ)).thenReturn(true);
+
+        String url = "http://localhost";
+        String credentialId = "some_id";
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, url, credentialId).kind)
+                .isEqualTo(FormValidation.Kind.WARNING);
+
+        // now we insert a credential with that id
+        String username = "user";
+        String password = "s3cr3t";
+        addUsernamePasswordCredential(username, password, credentialId,
+                "");
+
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, url, credentialId).kind)
+                .isEqualTo(FormValidation.Kind.OK);
+    }
 
     @Test
     public void testCredentialsOptions() throws IOException {
