@@ -29,6 +29,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Computer;
+import hudson.model.Executor;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Queue;
@@ -148,8 +149,9 @@ public class ZanataCliBuilder extends Builder implements SimpleBuildStep {
 
         // build.getEnvironment(listener) doesn't seem to get current node's environment.
         // This will work and inherit the global JAVA_HOME env
-        if (build.getExecutor() != null) {
-            Computer owner = build.getExecutor().getOwner();
+        Executor executor = build.getExecutor();
+        if (executor != null) {
+            Computer owner = executor.getOwner();
             EnvVars envForNode = owner.buildEnvironment(listener);
             envs.putAll(envForNode);
         }

@@ -1,14 +1,19 @@
 package org.jenkinsci.plugins.zanata.zanatareposync;
 
+import static hudson.model.Item.EXTENDED_READ;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import hudson.model.AbstractProject;
+import hudson.model.Item;
+import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
@@ -78,5 +83,37 @@ public class ZanataSyncStepBasicsTest {
         assertThat(options).hasSize(3);
         assertThat(options.stream().map(option -> option.value))
                 .contains("source", "trans", "both");
+    }
+
+    @Test
+    @WithoutJenkins
+    public void credentialIdIsOkWhenContextIsNotNullAndDoesNotHaveExtendedReadPermission() {
+        ZanataSyncStep.DescriptorImpl descriptor =
+                new ZanataSyncStep.DescriptorImpl();
+        AbstractProject context = Mockito.mock(AbstractProject.class);
+        when(context.hasPermission(EXTENDED_READ)).thenReturn(false);
+        String url = "http://localhost";
+        String credentialId = "some_id";
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, url, credentialId).kind)
+                        .isEqualTo(FormValidation.Kind.OK);
+    }
+
+    @Test
+    @WithoutJenkins
+    public void credentialIdIsOkWhenContextHasExtendedReadPermissionButURLOrValueIsNull() {
+        ZanataSyncStep.DescriptorImpl descriptor =
+                new ZanataSyncStep.DescriptorImpl();
+        AbstractProject context = Mockito.mock(AbstractProject.class);
+        when(context.hasPermission(EXTENDED_READ)).thenReturn(true);
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, null, null).kind)
+                .isEqualTo(FormValidation.Kind.OK);
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, "http://localhost",
+                null).kind).isEqualTo(FormValidation.Kind.OK);
+        assertThat(descriptor.doCheckZanataCredentialsId(
+                context, null,
+                "some_id").kind).isEqualTo(FormValidation.Kind.OK);
     }
 }
