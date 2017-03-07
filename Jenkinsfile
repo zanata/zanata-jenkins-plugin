@@ -1,6 +1,8 @@
 #!/usr/bin/env groovy
 
-boolean onJenkinsCI = env.JENKINS_URL && env.JENKINS_URL.startWith('https://ci.jenkins.io')
+boolean onJenkinsCI = env.JENKINS_URL &&
+    (env.JENKINS_URL == 'https://ci.jenkins.io/' ||
+        env.JENKINS_URL == 'https://ci.jenkins.io')
 
 if (onJenkinsCI) {
   /* running on ci.jenkins.io, we will have `buildPlugin` step provided by: https://github.com/jenkins-infra/pipeline-library */
