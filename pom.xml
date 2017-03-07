@@ -64,7 +64,6 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>HEAD</tag>
   </scm>
 
   <repositories>
@@ -86,11 +85,17 @@
       <version>4.1.0</version>
       <exclusions>
         <exclusion>
-          <!-- jenkins uses JUL!! -->
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <!-- jenkins uses JUL!! this better match the version used by jenkins -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.7.7</version>
     </dependency>
 
     <!-- depend on other plugins -->
@@ -239,7 +244,6 @@
         </os>
       </activation>
       <properties>
-        <!-- jacoco gives different coverage result on windows. Plus we have tests that will fail on windows -->
         <coverage.limit>0</coverage.limit>
       </properties>
     </profile>
@@ -293,10 +297,8 @@
           <!-- We use late property evaluation (@{argLine}) so that surefire
                will pick up the argLine set by jacoco:prepare-agent. -->
           <argLine>@{argLine}</argLine>
-          <excludedGroups>${exclude.test.group}</excludedGroups>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 
