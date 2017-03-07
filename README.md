@@ -1,3 +1,5 @@
+[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/zanata-plugin/master)](https://ci.jenkins.io/job/Plugins/job/zanata-plugin/job/master/)
+
 ### A Jenkins plugin to synchronize localization resources between SCM repository and Zanata
 
 Plugin home page: https://wiki.jenkins-ci.org/display/JENKINS/Zanata+Plugin
