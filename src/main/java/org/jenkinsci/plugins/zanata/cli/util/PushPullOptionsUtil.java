@@ -139,11 +139,16 @@ public final class PushPullOptionsUtil {
             File projectConfig) {
         options.setProjectConfig(projectConfig);
         // unset previous values so that we can reload them from project config
+        // TODO refactor this, we should just use a new object. Let ZanataSyncServiceImpl set basic options for us
         options.setSrcDir(null);
         options.setTransDir(null);
         options.setProj(null);
         options.setProjectVersion(null);
         options.setProjectType(null);
+        options.setIncludes(null);
+        options.setExcludes(null);
+        // FIXME URL is overrideable in ZanataSyncServiceImpl
+        options.setUrl(null);
 
         try {
             // here we must take it step by step due to an issue http://stackoverflow.com/questions/41253028/how-to-make-jenkins-plugin-aware-of-spi
