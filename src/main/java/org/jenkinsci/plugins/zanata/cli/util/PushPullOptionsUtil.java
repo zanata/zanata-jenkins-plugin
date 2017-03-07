@@ -147,6 +147,7 @@ public final class PushPullOptionsUtil {
         options.setProjectType(null);
         options.setIncludes(null);
         options.setExcludes(null);
+        options.setLocaleMapList(null);
         // FIXME URL is overrideable in ZanataSyncServiceImpl
         options.setUrl(null);
 
