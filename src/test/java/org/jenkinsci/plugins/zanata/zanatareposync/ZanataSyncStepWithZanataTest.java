@@ -28,6 +28,7 @@ import hudson.model.Result;
  * @author Patrick Huang
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
+// TODO this will fail on windows
 public class ZanataSyncStepWithZanataTest extends WithJenkins {
     private static final int FIVE_MINUTES = 1000 * 60 * 5;
     @Rule

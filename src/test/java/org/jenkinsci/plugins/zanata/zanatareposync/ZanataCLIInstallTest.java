@@ -35,6 +35,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class ZanataCLIInstallTest extends WithJenkins {
 
 
+    // TODO this will fail on windows
     @Test
     public void testInstallation() throws IOException, InterruptedException {
         VirtualChannel channel = Jenkins.getActiveInstance().getChannel();
