@@ -22,6 +22,7 @@ package org.jenkinsci.plugins.zanata.cli.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -68,6 +69,7 @@ import org.jboss.resteasy.plugins.providers.jaxb.XmlJAXBContextFinder;
 import org.jenkinsci.plugins.zanata.exception.ZanataSyncException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zanata.client.commands.AbstractPushPullOptionsImpl;
 import org.zanata.client.commands.OptionsUtil;
 import org.zanata.client.commands.PushPullOptions;
 import org.zanata.client.commands.pull.PullCommand;
@@ -138,18 +140,6 @@ public final class PushPullOptionsUtil {
     public static <O extends PushPullOptions> O applyProjectConfig(O options,
             File projectConfig) {
         options.setProjectConfig(projectConfig);
-        // unset previous values so that we can reload them from project config
-        // TODO refactor this, we should just use a new object. Let ZanataSyncServiceImpl set basic options for us
-        options.setSrcDir(null);
-        options.setTransDir(null);
-        options.setProj(null);
-        options.setProjectVersion(null);
-        options.setProjectType(null);
-        options.setIncludes(null);
-        options.setExcludes(null);
-        options.setLocaleMapList(null);
-        // FIXME URL is overrideable in ZanataSyncServiceImpl
-        options.setUrl(null);
 
         try {
             // here we must take it step by step due to an issue http://stackoverflow.com/questions/41253028/how-to-make-jenkins-plugin-aware-of-spi
@@ -182,6 +172,20 @@ public final class PushPullOptionsUtil {
         }
 
         return options;
+    }
+
+    private static <O extends PushPullOptions> void unsetLocaleList(O options) {
+        // TODO this is a temporary workaround until ZNTA-1784 is fixed
+        if (options instanceof AbstractPushPullOptionsImpl) {
+            try {
+                Field effectiveLocales = AbstractPushPullOptionsImpl.class
+                        .getDeclaredField("effectiveLocales");
+                effectiveLocales.setAccessible(true);
+                effectiveLocales.set(options, null);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private static <O extends PushPullOptions> RestClientFactory makeRestClientFactory(
