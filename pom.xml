@@ -242,6 +242,7 @@
         </os>
       </activation>
       <properties>
+        <!-- jacoco gives different coverage result on windows. Plus we have tests that will fail on windows -->
         <coverage.limit>0</coverage.limit>
       </properties>
     </profile>
