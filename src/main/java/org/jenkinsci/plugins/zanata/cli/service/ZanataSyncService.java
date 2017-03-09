@@ -32,10 +32,6 @@ import org.zanata.client.commands.push.PushOptions;
  */
 public interface ZanataSyncService extends Serializable {
 
-    PullOptions getPullOptions();
-
-    PushOptions getPushOptions();
-
     void pushToZanata(Path repoBase) throws ZanataSyncException;
 
     void pullFromZanata(Path repoBase) throws ZanataSyncException;

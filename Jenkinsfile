@@ -6,7 +6,7 @@ boolean onJenkinsCI = env.JENKINS_URL &&
 
 if (onJenkinsCI) {
   /* running on ci.jenkins.io, we will have `buildPlugin` step provided by: https://github.com/jenkins-infra/pipeline-library */
-  buildPlugin()
+  buildPlugin(['platforms': ['linux']])
   return
 }
 
@@ -59,12 +59,11 @@ try {
 
           // notify if compile+unit test successful
           notify.testResults(null)
-          archive "**/${hpiFiles},**/target/site/jacoco/**"
+          archive "**/${hpiFiles}"
         }
 
         stage('Report') {
-          // this is not working properly yet
-          // step([$class: 'JacocoPublisher'])
+           step([$class: 'JacocoPublisher'])
         }
       }
     }

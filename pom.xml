@@ -13,6 +13,7 @@
   <packaging>hpi</packaging>
 
   <properties>
+    <coverage.limit>0.64</coverage.limit>
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
     <jenkins.version>1.625.3</jenkins.version>
     <!-- Java Level to use. Java 7 required when using core >= 1.612 -->
@@ -232,6 +233,19 @@
         </repository>
       </repositories>
     </profile>
+
+    <profile>
+      <id>check-coverage</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <!-- jacoco gives different coverage result on windows. Plus we have tests that will fail on windows -->
+        <coverage.limit>0</coverage.limit>
+      </properties>
+    </profile>
   </profiles>
 
   <build>
@@ -239,6 +253,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.7.9</version>
         <executions>
           <execution>
             <id>default-prepare-agent</id>
@@ -264,9 +279,9 @@
                   <element>BUNDLE</element>
                   <limits>
                     <limit>
-                      <counter>COMPLEXITY</counter>
+                      <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.60</minimum>
+                      <minimum>${coverage.limit}</minimum>
                     </limit>
                   </limits>
                 </rule>

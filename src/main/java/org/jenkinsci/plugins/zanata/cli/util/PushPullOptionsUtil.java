@@ -138,12 +138,6 @@ public final class PushPullOptionsUtil {
     public static <O extends PushPullOptions> O applyProjectConfig(O options,
             File projectConfig) {
         options.setProjectConfig(projectConfig);
-        // unset previous values so that we can reload them from project config
-        options.setSrcDir(null);
-        options.setTransDir(null);
-        options.setProj(null);
-        options.setProjectVersion(null);
-        options.setProjectType(null);
 
         try {
             // here we must take it step by step due to an issue http://stackoverflow.com/questions/41253028/how-to-make-jenkins-plugin-aware-of-spi
@@ -169,6 +163,7 @@ public final class PushPullOptionsUtil {
         options.setTransDir(
                 new File(baseDir, options.getTransDir() != null ?
                         options.getTransDir().getPath() : "."));
+        // TODO maybe we should allow this as long as user can configure their jenkins box to have the commands available?
         // disable commandhook
         if (!options.getCommandHooks().isEmpty()) {
             throw new ZanataSyncException(
