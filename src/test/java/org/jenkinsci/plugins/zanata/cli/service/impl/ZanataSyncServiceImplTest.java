@@ -166,6 +166,7 @@ public class ZanataSyncServiceImplTest {
     }
 
     @Test
+    @WithoutJenkins
     public void failIfNoProjectConfigCanBeFound() throws IOException {
         SyncJobDetail jobDetail = builder().build();
 

@@ -22,7 +22,6 @@ package org.jenkinsci.plugins.zanata.cli.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -69,7 +68,6 @@ import org.jboss.resteasy.plugins.providers.jaxb.XmlJAXBContextFinder;
 import org.jenkinsci.plugins.zanata.exception.ZanataSyncException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zanata.client.commands.AbstractPushPullOptionsImpl;
 import org.zanata.client.commands.OptionsUtil;
 import org.zanata.client.commands.PushPullOptions;
 import org.zanata.client.commands.pull.PullCommand;
@@ -173,20 +171,6 @@ public final class PushPullOptionsUtil {
         }
 
         return options;
-    }
-
-    private static <O extends PushPullOptions> void unsetLocaleList(O options) {
-        // TODO this is a temporary workaround until ZNTA-1784 is fixed
-        if (options instanceof AbstractPushPullOptionsImpl) {
-            try {
-                Field effectiveLocales = AbstractPushPullOptionsImpl.class
-                        .getDeclaredField("effectiveLocales");
-                effectiveLocales.setAccessible(true);
-                effectiveLocales.set(options, null);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private static <O extends PushPullOptions> RestClientFactory makeRestClientFactory(
