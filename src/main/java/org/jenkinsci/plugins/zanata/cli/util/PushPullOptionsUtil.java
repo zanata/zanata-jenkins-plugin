@@ -165,6 +165,7 @@ public final class PushPullOptionsUtil {
         options.setTransDir(
                 new File(baseDir, options.getTransDir() != null ?
                         options.getTransDir().getPath() : "."));
+        // TODO maybe we should allow this as long as user can configure their jenkins box to have the commands available?
         // disable commandhook
         if (!options.getCommandHooks().isEmpty()) {
             throw new ZanataSyncException(

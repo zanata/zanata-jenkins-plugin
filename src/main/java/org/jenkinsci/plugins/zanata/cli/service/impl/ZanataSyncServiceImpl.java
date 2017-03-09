@@ -23,6 +23,7 @@ package org.jenkinsci.plugins.zanata.cli.service.impl;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -30,6 +31,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.jenkinsci.plugins.zanata.cli.HasSyncJobDetail;
+import org.jenkinsci.plugins.zanata.cli.service.PullService;
+import org.jenkinsci.plugins.zanata.cli.service.PushService;
 import org.jenkinsci.plugins.zanata.cli.service.ZanataSyncService;
 import org.jenkinsci.plugins.zanata.cli.util.PushPullOptionsUtil;
 import org.jenkinsci.plugins.zanata.exception.ZanataSyncException;
@@ -41,6 +44,7 @@ import org.zanata.client.commands.pull.PullOptionsImpl;
 import org.zanata.client.commands.push.PushOptions;
 import org.zanata.client.commands.push.PushOptionsImpl;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -54,8 +58,8 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
             LoggerFactory.getLogger(ZanataSyncServiceImpl.class);
     private static final long serialVersionUID = 1L;
 
-    private final PushServiceImpl pushService = new PushServiceImpl();
-    private final PullServiceImpl pullService = new PullServiceImpl();
+    private final PushService pushService;
+    private final PullService pullService;
     private final Set<String> projectConfigs;
     private final String zanataUrl;
     private final String username;
@@ -63,7 +67,11 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
     private final String localeId;
     private final String pushToZanataOption;
 
-    public ZanataSyncServiceImpl(HasSyncJobDetail jobDetail) {
+    @VisibleForTesting
+    protected ZanataSyncServiceImpl(PullService pullService,
+            PushService pushService, HasSyncJobDetail jobDetail) {
+        this.pullService = pullService;
+        this.pushService = pushService;
         zanataUrl = jobDetail.getZanataURL();
         String syncToZanataOption = jobDetail.getSyncOption();
         pushToZanataOption = Strings.emptyToNull(syncToZanataOption);
@@ -74,12 +82,16 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
         localeId = jobDetail.getZanataLocaleIds();
 
 
-        // if project id is given, only handle this project
-//        String projectId = jobDetail.getProject();
-//        if (!Strings.isNullOrEmpty(projectId)) {
-//            pullOptions.setProj(projectId);
-//            pushOptions.setProj(projectId);
-//        }
+        // if project id is given from webhook, only handle this project
+        // String projectId = jobDetail.getProject();
+        // if (!Strings.isNullOrEmpty(projectId)) {
+        // pullOptions.setProj(projectId);
+        // pushOptions.setProj(projectId);
+        // }
+    }
+
+    public ZanataSyncServiceImpl(HasSyncJobDetail jobDetail) {
+        this(new PullServiceImpl(), new PushServiceImpl(), jobDetail);
     }
 
     private PushOptionsImpl newPushOptionsFromJobConfig() {
@@ -137,12 +149,16 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
         } else {
             for (String projectConfig : projectConfigs) {
                 Path absPath = Paths.get(repoBase.toString(), projectConfig);
-                PushOptionsImpl opts = newPushOptionsFromJobConfig();
-                String project = opts.getProj();
+                if (Files.exists(absPath)) {
+                    PushOptionsImpl opts = newPushOptionsFromJobConfig();
+                    String project = opts.getProj();
 
-                PushPullOptionsUtil.applyProjectConfig(
-                        opts, absPath.toFile());
-                pushIfProjectIdMatchesConfig(opts, project, absPath.toFile());
+                    PushPullOptionsUtil.applyProjectConfig(
+                            opts, absPath.toFile());
+                    pushIfProjectIdMatchesConfig(opts, project, absPath.toFile());
+                } else {
+                    log.warn("{} does not exist! Ignored!", projectConfig);
+                }
             }
         }
     }
@@ -198,12 +214,16 @@ public class ZanataSyncServiceImpl implements ZanataSyncService {
         } else {
             for (String projectConfig : projectConfigs) {
                 Path absPath = Paths.get(repoBase.toString(), projectConfig);
-                PullOptionsImpl opts = newPullOptionsFromJobConfig();
-                String project = opts.getProj();
+                if (Files.exists(absPath)) {
+                    PullOptionsImpl opts = newPullOptionsFromJobConfig();
+                    String project = opts.getProj();
 
-                opts = PushPullOptionsUtil.applyProjectConfig(opts,
-                                absPath.toFile());
-                pullIfProjectIdMatchesConfig(opts, project, absPath.toFile());
+                    opts = PushPullOptionsUtil.applyProjectConfig(opts,
+                            absPath.toFile());
+                    pullIfProjectIdMatchesConfig(opts, project, absPath.toFile());
+                } else {
+                    log.warn("{} does not exist! Ignored!", projectConfig);
+                }
             }
         }
     }
