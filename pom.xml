@@ -29,6 +29,8 @@
     <maven.compiler.target>1.${java.level}</maven.compiler.target>
     <workflow.version>1.14</workflow.version>
     <assertj.version>3.6.2</assertj.version>
+    <!-- by default we run all tests. But you can set this property to org.jenkinsci.plugins.zanata.SlowTest to exclude slow tests -->
+    <exclude.test.group />
   </properties>
 
   <name>Zanata Plugin</name>
@@ -297,6 +299,7 @@
           <!-- We use late property evaluation (@{argLine}) so that surefire
                will pick up the argLine set by jacoco:prepare-agent. -->
           <argLine>@{argLine}</argLine>
+          <excludedGroups>${exclude.test.group}</excludedGroups>
         </configuration>
       </plugin>
 

@@ -3,11 +3,14 @@ package org.jenkinsci.plugins.zanata.zanatareposync;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.jenkinsci.plugins.workflow.structs.DescribableHelper;
+import org.jenkinsci.plugins.zanata.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import hudson.model.FreeStyleProject;
 import hudson.util.Secret;
 
+@Category(SlowTest.class)
 public class ZanataWebhookProjectPropertyTest extends WithJenkins {
 
     @Test

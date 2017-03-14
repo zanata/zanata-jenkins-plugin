@@ -7,9 +7,11 @@ import static org.jenkinsci.plugins.zanata.zanatareposync.TestUtils.readFileAsSt
 
 import java.io.IOException;
 
+import org.jenkinsci.plugins.zanata.SlowTest;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.jvnet.hudson.test.TestBuilder;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -29,6 +31,7 @@ import hudson.model.Result;
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
 // TODO this will fail on windows
+@Category(SlowTest.class)
 public class ZanataSyncStepWithZanataTest extends WithJenkins {
     private static final int FIVE_MINUTES = 1000 * 60 * 5;
     @Rule

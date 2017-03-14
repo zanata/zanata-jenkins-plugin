@@ -10,9 +10,11 @@ import static org.hamcrest.Matchers.equalToIgnoringCase;
 
 import java.io.IOException;
 
+import org.jenkinsci.plugins.zanata.SlowTest;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
 
@@ -31,6 +33,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
+@Category(SlowTest.class)
 public class ZanataWebhookJobTriggerTest {
     private static final Header JSON_CONTENT_TYPE =
             new Header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON);
