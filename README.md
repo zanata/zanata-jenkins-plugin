@@ -45,6 +45,10 @@ Disadvantage being that it uses only the included version of Zanata CLI java cla
 Option 2 has the advantage of being flexible. You can use all the features and options of [Zanata CLI](http://zanata-client.readthedocs.io/en/release/).
 The disadvantage is, you will need to know how to use Zanata CLI. You also need to manually manage source control in your shell script.
 
+### How to configure a job to listen to Zanata webhook event
+Check the *Accept Zanata Webhook* checkbox under General section, it will open up more fields.
+- The 'URL to register on Zanata' filed is a readonly field for you to register webhook in Zanata. See [Zanata webhook](http://docs.zanata.org/en/release/user-guide/projects/project-settings/#adding-a-new-webhook) for more detail.
+- The optional webhook secret for verification of incoming webhooks
 
 ### How to use it in pipeline build
 
