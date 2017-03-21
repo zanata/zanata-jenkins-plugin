@@ -13,6 +13,6 @@ pages:
 - Getting Started:
   - Installation: 'installation.md'
   - Configuration: 'configuration/index.md'
-      - Zanata Sync Build Step: 'configuration/zanata-sync.md'
-      - Install Zanata CLI: 'configuration/install-cli.md'
-      - Post Build: 'configuration/post-build.md'
+    - Zanata Sync Build Step: 'configuration/zanata-sync.md'
+    - Install Zanata CLI: 'configuration/install-cli.md'
+    - Post Build: 'configuration/post-build.md'
