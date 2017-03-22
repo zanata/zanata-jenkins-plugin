@@ -1,8 +1,7 @@
 ### Prerequisite
 
-Same [Prerequisite](/configuration/index.md) apply. 
-Make sure you give your credentials a meaningful ID.
-Install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin).
+- Same [Prerequisite](/configuration/#prerequisite) applies (make sure you give your credentials a meaningful ID) 
+- Install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin).
 
 ### Next step
 
