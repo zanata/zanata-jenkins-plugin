@@ -9,7 +9,7 @@ _NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenki
 - Click 'Add Zanata CLI' to open up an installer
     - Check 'Install automatically' if applicable
     - Input a version for the Zanata CLI you want to install. The version will become part of the tool name.
-    - Change the 'Download URL for binary archive' and 'Subdirectory of extracted archive' according to the version you want to install
+    - Change the 'Download URL for binary archive' and 'Subdirectory of extracted archive' according to the version you want to install (__note__: Subdirectory must match what's in the zip/tar.gz. You should only need to change the version number in the template)
 - Repeat previous step if you want to install multiple version of Zanata CLI
 - Click 'Save'
 <figure>

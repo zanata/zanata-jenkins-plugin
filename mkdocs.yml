@@ -9,10 +9,9 @@ theme: readthedocs
 pages:
 - Home: 'index.md'
 - Release notes: 'release-notes.md'
-# Getting started
-- Getting Started:
-  - Installation: 'installation.md'
-  - Configuration:
-    - Zanata Sync Build Step: 'configuration/build-step/zanata-sync.md'
-    - Install Zanata CLI: 'configuration/build-step/install-cli.md'
-    - Post Build: 'configuration/post-build.md'
+- Installation: 'installation.md'
+- Configuration:
+  - General: 'configuration/index.md'
+  - Zanata Sync Build Step: 'configuration/build-step/zanata-sync.md'
+  - Install Zanata CLI: 'configuration/build-step/install-cli.md'
+  - Post Build SCM Sync: 'configuration/post-build.md'
