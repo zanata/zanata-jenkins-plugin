@@ -57,6 +57,6 @@ git config user.email "jenkins-noreply@redhat.com"
 git commit -m "$BUILD_URL did this"
 
 ```
-2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli.md)
+2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
 
-__NOTE__: You may still want to do normal git push in a [post build step](/configuration/post-build.md)
+__NOTE__: You may still want to do normal git push in a [post build step](/configuration/post-build/)

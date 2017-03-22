@@ -7,7 +7,7 @@ Under 'Build' section, select 'Zanata Sync' as a build step
 
 Once selected, you should see its configuration:
 <figure>
-![Zanata Sync build step configuration](/images/zanata_sync_build_step.png)
+[![Zanata Sync build step configuration](/images/zanata_sync_build_step.png)](/images/zanata_sync_build_step.png)
 </figure>
 
 Here you can:
@@ -19,4 +19,4 @@ Here you can:
 If you choose pull translation from Zanata, it will commit any changes if SCM is git.
 If you are not using git, you will need to configure a step yourself to do it.
 
-If you have translation commit in your build, you may also want to [push that back to the remote SCM repo](/configuration/post-build.md).
+If you have translation commit in your build, you may also want to [push that back to the remote SCM repo](/configuration/post-build/).

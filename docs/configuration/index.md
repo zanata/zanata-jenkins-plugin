@@ -21,7 +21,7 @@ In your job configuration, check the *Accept Zanata Webhook* checkbox under 'Gen
 - The 'URL to register on Zanata' filed is a readonly field for you to register webhook in Zanata. See [Zanata webhook](http://docs.zanata.org/en/release/user-guide/projects/project-settings/#adding-a-new-webhook) for more detail.
 - The optional webhook secret for verification of incoming webhooks
 <figure>
-![Accept Zanata Webhook](/images/zanata_webhook.png)
+[![Accept Zanata Webhook](/images/zanata_webhook.png)](/images/zanata_webhook.png)
 </figure>
 
 Configure your SCM as per Jenkins job usual.
@@ -31,10 +31,10 @@ e.g. github plugin to listen to github webhook event and trigger a build to push
 
 Then in the 'Build' section, you will have two options to push source to and/or pull translation from Zanata server.
 
-1. [Use the plugin as a build step](/configuration/build-step/zanata-sync.md)    
-2. [Install Zanata CLI on Jenkins node and use scripting to invoke it](/configuration/build-step/install-cli.md)
+1. [Use the plugin as a build step](/configuration/build-step/zanata-sync/)    
+2. [Install Zanata CLI on Jenkins node and use scripting to invoke it](/configuration/build-step/install-cli/)
 
-Option 1 has the advantage of being installation free and simple to use. It will work on all type of jenkins slave nodes.
+Option 1 has the advantage of being installation free and simple to use. It will work on all type of jenkins slave nodes (windows and linux).
 It will commit translation after pull automatically if you use Git as SCM. 
 Disadvantage being that it uses only the included version of Zanata CLI java classes. and you can't do much customization for push and pull.
 

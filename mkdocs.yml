@@ -18,3 +18,6 @@ pages:
   - Post Build SCM Sync: 'configuration/post-build.md'
 - Pipeline build:
   - General: 'pipeline/index.md'
+  - Example using Zanata Sync Build Step: 'pipeline/zanata-sync-pipeline-example.md'
+  - Example using Zanata CLI: 'pipeline/install-use-cli-pipeline-example.md'
+  - Example using Zanata Sync via CLI Build Step: 'pipeline/zanata-sync-via-cli-pipeline-example.md'

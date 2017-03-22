@@ -18,7 +18,7 @@ The default script templates expect:
 and zanata API key provided in environment variable 'ZANATA_APIKEY'.
 - zanata-cli is on PATH
 
-See [CLI installation](/configuration/build-step/install-cli.md) for how to install CLI and how to bind Zanata credentials to environment variables.
+See [CLI installation](/configuration/build-step/install-cli/) for how to install CLI and how to bind Zanata credentials to environment variables.
  
 ##### Job configuration 
 
@@ -33,5 +33,5 @@ Both two types of sync are running the default shell scripts, you could customiz
 
 Example configuration:
 <figure>
-![Example configuration](/images/zanata_sync_via_cli_step.png)
+[![Example configuration](/images/zanata_sync_via_cli_step.png)](/images/zanata_sync_via_cli_step.png)
 </figure>
