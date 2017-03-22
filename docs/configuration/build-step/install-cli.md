@@ -18,6 +18,7 @@ _NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenki
 
 ##### Individual Job Configuration
 Under 'Build Environment' section:
+
 - Check 'Install Zanata CLI' then in its opened configuration
     - Click 'Add Tool'
     - Select the CLI from the dropdown in 'Zanata CLI selection'
@@ -31,12 +32,14 @@ Under 'Build Environment' section:
 ![Install Zanata CLI for a job](/images/job_installs_cli.png)
 </figure>
 
-### Use the installed CLI in build
+### Use the installed Zanata CLI in build
 
 You can use it in two ways:
+
 1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it
 
-For example assuming you follow above configuration and chose 'zanata_cli_4_0_0' and checked convert to uppercase
+For example assuming you follow above configuration and chose 'zanata_cli_4_0_0' and checked convert to uppercase,
+Below shell script will do zanata push and pull and then git commit
 ```bash
 Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
 
@@ -56,4 +59,4 @@ git commit -m "$BUILD_URL did this"
 ```
 2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli.md)
 
-Do normal git push in a [post build step](/configuration/post-build.md)
+__NOTE__: You may still want to do normal git push in a [post build step](/configuration/post-build.md)

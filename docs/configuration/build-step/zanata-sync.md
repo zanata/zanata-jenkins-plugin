@@ -11,6 +11,7 @@ Once selected, you should see its configuration:
 </figure>
 
 Here you can:
+
 - Choose the Zanata credential for your Zanata Server
 - Choose to push source to Zanata and/or pull translation from Zanata
 - Click on 'Advanced Options' to reveal more advanced options
