@@ -3,7 +3,7 @@
 ##### On the Zanata server you use
 
 - Register a Zanata account and [have a generated API key](http://docs.zanata.org/en/release/user-guide/account/account-settings/#client)
-- Create the project and version to use (configure your locales, permissions etc)
+- [Create the project](http://docs.zanata.org/en/release/user-guide/projects/create-project/) and [version](http://docs.zanata.org/en/release/user-guide/versions/create-version/) to use (configure your locales, permissions etc)
 - [Download the Zanata project version config](http://docs.zanata.org/en/release/client/configuration/), customize it if needed and check it into your SCM
 
 ##### Global Configuration in your Jenkins server
@@ -34,8 +34,8 @@ push resources to Zanata.
 
 Then in the 'Build' section, you will have two options to push source to and/or pull translation from Zanata server.
 
-1. [Use the plugin as a build step](/configuration/build-step/zanata-sync.md)    
-2. [Install Zanata CLI on Jenkins node and use scripting to invoke it](/configuration/build-step/install-cli.md)
+1. [Use the plugin as a build step](/configuration/build-step/zanata-sync)    
+2. [Install Zanata CLI on Jenkins node and use scripting to invoke it](/configuration/build-step/install-cli)
 
 Option 1 has the advantage of being installation free and simple to use. It will work on all type of jenkins slave nodes.
 It will commit translation after pull automatically if you use Git as SCM. 

@@ -7,20 +7,20 @@ From Yu Shao yu.shao.gm@gmail.com
 
 - Go to 'Manage Jenkins'
 - Go to 'Configure System'
-- Scroll down to find 'Zanata CLI script template'
+- Scroll down to find 'Zanata cli script template'
     
-There are two fields under 'Zanata CLI script template'. Each of them 
-contains a script template to use in your job.
+There are two fields under 'Zanata cli script template'. Each of them contains
+ a script template to use in your job.
 
 ##### Things to note
 
 The default script templates expect the following:
 
-- Zanata username to be provided in an environment variable 'ZANATA_USERNAME', 
+- zanata username to be provided in an environment variable 'ZANATA_USERNAME', 
 and zanata API key provided in environment variable 'ZANATA_APIKEY'.
-- Zanata-CLI is on PATH
+- zanata-cli is on PATH
 
-See [CLI installation](/configuration/build-step/install-cli.md) for how to install CLI and how to bind Zanata credentials to environment variables.
+See [CLI installation](/configuration/build-step/install-cli/) for how to install CLI and how to bind Zanata credentials to environment variables.
  
 ##### Job configuration 
 
@@ -40,5 +40,5 @@ enabling or disabling them.
 
 Example configuration:
 <figure>
-![Example configuration](/images/zanata_sync_via_cli_step.png)
+[![Example configuration](/images/zanata_sync_via_cli_step.png)](/images/zanata_sync_via_cli_step.png)
 </figure>

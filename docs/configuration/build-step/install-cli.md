@@ -1,6 +1,6 @@
-_NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin) to use this option.
-
 ### Zanata CLI Installation
+
+_NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin) to use this option.
 
 ##### Global Configuration
 - Go to 'Manage Jenkins'
@@ -18,11 +18,12 @@ _NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenki
 
 ##### Individual Job Configuration
 Under 'Build Environment' section:
+
 - Check 'Install Zanata CLI' then in its opened configuration
     - Click 'Add Tool'
     - Select the CLI from the dropdown in 'Zanata CLI selection'
     - Optionally check 'Convert #CLIName_HOME variables to the upper-case'
-- Check 'Use secret text(s) or file(s)' then
+- Check 'Use secret text(s) or file(s)' (from [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin)) then
     - Select 'Username and password (separated)' from the 'Add' dropdown
     - Input a username variable name for Zanata username
     - Input a password variable name for Zanata API key
@@ -34,10 +35,13 @@ Under 'Build Environment' section:
 ### Use the installed CLI in build
 
 You can use it in two ways:
-1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it
 
-For example, assuming you follow above configuration by choosing 
-'zanata_cli_4_0_0' and checking convert to uppercase:
+1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it (see [below example](/configuration/build-step/install-cli/#example-execute-shell-step-using-zanata-cli))
+2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
+
+##### Example Execute shell step using Zanata CLI
+Assuming you follow [above configuration](/images/job_installs_cli.png) and chose 'zanata_cli_4_0_0' and checked convert to uppercase,
+Below shell script will do zanata push and pull and then git commit:
 ```bash
 Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
 
