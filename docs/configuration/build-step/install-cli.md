@@ -1,7 +1,6 @@
-### Things to note
-Most likely you will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin).
-
 ### Zanata CLI Installation
+
+_NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin) to use this option.
 
 ##### Global Configuration
 - Go to 'Manage Jenkins'
@@ -33,16 +32,18 @@ Under 'Build Environment' section:
 ![Install Zanata CLI for a job](/images/job_installs_cli.png)
 </figure>
 
-### Use the installed Zanata CLI in build
+### Use the installed CLI in build
 
 You can use it in two ways:
 
 1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it (see [below example](/configuration/build-step/install-cli/#example-execute-shell-step-using-zanata-cli))
 2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
 
-##### Example Execute shell step using Zanata CLI
-Assuming you follow [above configuration](/images/job_installs_cli.png) and chose 'zanata_cli_4_0_0' and checked convert to uppercase,
-Below shell script will do zanata push and pull and then git commit:
+##### Example: Execute shell step using Zanata CLI
+Assuming you follow the [above configuration](/images/job_installs_cli.png) and 
+have chosen 'zanata_cli_4_0_0' and checked convert to uppercase,
+the shell script below will do zanata push and pull and then git 
+commit:
 ```bash
 Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
 
