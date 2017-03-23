@@ -39,7 +39,7 @@ You can use it in two ways:
 1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it (see [below example](/configuration/build-step/install-cli/#example-execute-shell-step-using-zanata-cli))
 2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
 
-##### Example Execute shell step using Zanata CLI
+##### Example: Execute shell step using Zanata CLI
 Assuming you follow the [above configuration](/images/job_installs_cli.png) and 
 have chosen 'zanata_cli_4_0_0' and checked convert to uppercase,
 the shell script below will do zanata push and pull and then git 
