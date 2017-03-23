@@ -1,5 +1,4 @@
-### Things to note
-Most likely you will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin).
+_NOTE:_ You will need to install [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin) to use this option.
 
 ### Zanata CLI Installation
 
@@ -19,12 +18,11 @@ Most likely you will need to install [Credentials Binding Plugin](https://wiki.j
 
 ##### Individual Job Configuration
 Under 'Build Environment' section:
-
 - Check 'Install Zanata CLI' then in its opened configuration
     - Click 'Add Tool'
     - Select the CLI from the dropdown in 'Zanata CLI selection'
     - Optionally check 'Convert #CLIName_HOME variables to the upper-case'
-- Check 'Use secret text(s) or file(s)' (from [Credentials Binding Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Binding+Plugin)) then
+- Check 'Use secret text(s) or file(s)' then
     - Select 'Username and password (separated)' from the 'Add' dropdown
     - Input a username variable name for Zanata username
     - Input a password variable name for Zanata API key
@@ -33,16 +31,13 @@ Under 'Build Environment' section:
 ![Install Zanata CLI for a job](/images/job_installs_cli.png)
 </figure>
 
-### Use the installed Zanata CLI in build
+### Use the installed CLI in build
 
 You can use it in two ways:
+1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it
 
-1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it (see [below example](/configuration/build-step/install-cli/#example-execute-shell-step-using-zanata-cli))
-2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
-
-##### Example Execute shell step using Zanata CLI
-Assuming you follow [above configuration](/images/job_installs_cli.png) and chose 'zanata_cli_4_0_0' and checked convert to uppercase,
-Below shell script will do zanata push and pull and then git commit:
+For example, assuming you follow above configuration by choosing 
+'zanata_cli_4_0_0' and checking convert to uppercase:
 ```bash
 Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
 
@@ -57,9 +52,9 @@ git add .
 # only needed if you haven't configure this globally in your Jenkins
 git config user.name "Jenkins"
 git config user.email "jenkins-noreply@redhat.com"
-
 git commit -m "$BUILD_URL did this"
 
 ```
+2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli.md)
 
-__NOTE__: You still need to do normal git push in a [post build step](/configuration/post-build/)
+Do normal git push in a [post build step](/configuration/post-build.md)

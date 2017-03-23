@@ -7,7 +7,7 @@
 ## Install manually
 
 In case your Jenkins server is configured to use a different update center, 
-and Zanata Jenkins Plugin is not in it. 
+and Zanata Jenkins Plugin is not in it:
 
 - Go to [Plugin Home](https://wiki.jenkins-ci.org/display/JENKINS/Zanata+Plugin) and click on the Latest Release to download the zanata.hpi file
 - Go to 'Manage Plugins' page
