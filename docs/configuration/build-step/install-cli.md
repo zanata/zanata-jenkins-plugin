@@ -40,8 +40,10 @@ You can use it in two ways:
 2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
 
 ##### Example Execute shell step using Zanata CLI
-Assuming you follow [above configuration](/images/job_installs_cli.png) and chose 'zanata_cli_4_0_0' and checked convert to uppercase,
-Below shell script will do zanata push and pull and then git commit:
+Assuming you follow the [above configuration](/images/job_installs_cli.png) and 
+have chosen 'zanata_cli_4_0_0' and checked convert to uppercase,
+the shell script below will do zanata push and pull and then git 
+commit:
 ```bash
 Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
 
@@ -56,9 +58,9 @@ git add .
 # only needed if you haven't configure this globally in your Jenkins
 git config user.name "Jenkins"
 git config user.email "jenkins-noreply@redhat.com"
+
 git commit -m "$BUILD_URL did this"
 
 ```
-2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli.md)
 
-Do normal git push in a [post build step](/configuration/post-build.md)
+__NOTE__: You still need to do normal git push in a [post build step](/configuration/post-build/)
