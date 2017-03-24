@@ -13,11 +13,10 @@ pages:
 - Configuration:
   - General: 'configuration/index.md'
   - Zanata Sync Build Step: 'configuration/build-step/zanata-sync.md'
-  - Install and use Zanata CLI: 'configuration/build-step/install-cli.md'
+  - Install Zanata CLI: 'configuration/build-step/install-cli.md'
   - Zanata Sync via CLI Build Step: 'configuration/build-step/zanata-sync-via-cli.md'
   - Post Build SCM Sync: 'configuration/post-build.md'
 - Pipeline build:
   - General: 'pipeline/index.md'
   - Example using Zanata Sync Build Step: 'pipeline/zanata-sync-pipeline-example.md'
-  - Example using Zanata CLI: 'pipeline/install-use-cli-pipeline-example.md'
   - Example using Zanata Sync via CLI Build Step: 'pipeline/zanata-sync-via-cli-pipeline-example.md'

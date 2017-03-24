@@ -34,33 +34,6 @@ Under 'Build Environment' section:
 
 ### Use the installed CLI in build
 
-You can use it in two ways:
-
-1. Add a build step such as 'Execute shell' and invoke Zanata CLI in it (see [below example](/configuration/build-step/install-cli/#example-execute-shell-step-using-zanata-cli))
-2. Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
-
-##### Example: Execute shell step using Zanata CLI
-Assuming you follow the [above configuration](/images/job_installs_cli.png) and 
-have chosen 'zanata_cli_4_0_0' and checked convert to uppercase,
-the shell script below will do zanata push and pull and then git 
-commit:
-```bash
-Z=$ZANATA_CLI_4_0_0_HOME/bin/zanata-cli
-
-$Z -B push --file-types "PLAIN_TEXT[adoc]" --username $Z_U --key $Z_P
-
-$Z -B pull --username $Z_U --key $Z_P
-
-# only needed if .zanata-cache/ is not in your .gitignore
-rm -rf .zanata-cache/
-
-git add .
-# only needed if you haven't configure this globally in your Jenkins
-git config user.name "Jenkins"
-git config user.email "jenkins-noreply@redhat.com"
-
-git commit -m "$BUILD_URL did this"
-
-```
+Choose another build step [Zanata Sync via CLI](/configuration/zanata-sync-via-cli/)
 
 __NOTE__: You still need to do normal git push in a [post build step](/configuration/post-build/)

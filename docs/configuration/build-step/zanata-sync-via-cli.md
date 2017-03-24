@@ -1,5 +1,4 @@
-### Alternative build step 
-####(experimental and subject to change without notice)
+### Alternative build step (still in development)
 
 From Yu Shao yu.shao.gm@gmail.com
 

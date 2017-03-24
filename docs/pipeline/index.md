@@ -15,5 +15,4 @@ _Hint_: Use Pipeline Syntax and choose 'step: General Build Step', then select t
 ##### Complete sample pipeline scripts
 
 - [Use Zanata Sync build step](/pipeline/zanata-sync-pipeline-example/)
-- [Install and use Zanata CLI](/pipeline/install-use-cli-pipeline-example/)
 - [Use Zanata Sync via CLI build step](/pipeline/zanata-sync-via-cli-pipeline-example/)
