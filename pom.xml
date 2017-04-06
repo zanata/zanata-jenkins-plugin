@@ -86,17 +86,11 @@
       <version>4.1.0</version>
       <exclusions>
         <exclusion>
+          <!-- jenkins uses JUL!! -->
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <!-- jenkins uses JUL!! this better match the version used by jenkins -->
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <version>1.7.7</version>
     </dependency>
 
     <!-- depend on other plugins -->
