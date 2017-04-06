@@ -217,6 +217,9 @@ public class ZanataSyncStep extends Builder implements SimpleBuildStep,
                         gitSyncService = new GitSyncService(this, git);
                 pullFromZanata(workspace, zanataSyncService, gitSyncService, listener);
             }
+            if (!pushToZanata && !pullFromZanata) {
+                logger(listener).println("Both push and pull are disabled. Nothing to do.");
+            }
         } catch (IOException | InterruptedException e) {
             logger(listener).println("Zanata Sync failed:" + e.getMessage());
             throw new RuntimeException(e);
