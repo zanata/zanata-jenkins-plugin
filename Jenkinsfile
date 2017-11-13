@@ -18,6 +18,10 @@ public static final String PROJ_URL = 'https://github.com/zanata/zanata-jenkins-
 @Field
 public static final String PIPELINE_LIBRARY_BRANCH = 'ZNTA-2270-jenkins2'
 
+@Field
+public static final String testReports = 'target/surefire-reports/TEST-*.xml'
+
+
 // GROOVY-3278:
 //   Using referenced String constant as value of Annotation causes compile error
 @Library('zanata-pipeline-library@ZNTA-2270-jenkins2')
@@ -82,7 +86,6 @@ timestamps {
         // The result is archived
         stage('Build') {
           notify.startBuilding()
-          def testReports = 'target/surefire-reports/TEST-*.xml'
           def hpiFiles = 'target/*.hpi'
 
           withEnv(["MVN_HOME=${ tool name: 'mvn', type: 'hudson.tasks.Maven$MavenInstallation' }"]) {
