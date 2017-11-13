@@ -16,11 +16,11 @@ public static final String PROJ_URL = 'https://github.com/zanata/zanata-jenkins-
 // Import pipeline library for utility methods & classes:
 // ansicolor(), Notifier, PullRequests, Strings
 @Field
-public static final String PIPELINE_LIBRARY_BRANCH = 'v0.3.0'
+public static final String PIPELINE_LIBRARY_BRANCH = 'ZNTA-2270-jenkins2'
 
 // GROOVY-3278:
 //   Using referenced String constant as value of Annotation causes compile error
-@Library('zanata-pipeline-library@v0.3.0')
+@Library('zanata-pipeline-library@ZNTA-2270-jenkins2')
 import org.zanata.jenkins.Notifier
 import org.zanata.jenkins.PullRequests
 import org.zanata.jenkins.ScmGit
