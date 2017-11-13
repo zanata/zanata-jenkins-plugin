@@ -53,6 +53,19 @@ def projectProperties = [
     $class: 'BuildDiscarderProperty',
     strategy: [$class: 'LogRotator', numToKeepStr: '10']
   ],
+  [
+    $class: 'ParametersDefinitionProperty',
+    parameterDefinitions: [
+      [
+        $class: 'LabelParameterDefinition',
+        // Specify the default node in Jenkins env var DEFAULT_NODE
+        // (eg kvm), or leave blank to build on any node.
+        defaultValue: 'master || !master',
+        description: 'Jenkins node label to use for build',
+        name: 'LABEL'
+      ],
+    ],
+  ],
 ]
 
 properties(projectProperties)
