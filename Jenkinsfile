@@ -10,11 +10,41 @@ if (onJenkinsCI) {
   return
 }
 
+@Field
+public static final String PROJ_URL = 'https://github.com/zanata/zanata-jenkins-plugin'
 
-@Library('github.com/zanata/zanata-pipeline-library@master')
+// Import pipeline library for utility methods & classes:
+// ansicolor(), Notifier, PullRequests, Strings
+@Field
+public static final String PIPELINE_LIBRARY_BRANCH = 'v0.3.0'
+
+// GROOVY-3278:
+//   Using referenced String constant as value of Annotation causes compile error
+@Library('zanata-pipeline-library@v0.3.0')
+import org.zanata.jenkins.Notifier
+import org.zanata.jenkins.PullRequests
+import org.zanata.jenkins.ScmGit
+
+import groovy.transform.Field
+
+PullRequests.ensureJobDescription(env, manager, steps)
+
+@Field
+def pipelineLibraryScmGit
+
+@Field
+def mainScmGit
+
+@Field
+def notify
+// initialiser must be run separately (bindings not available during compilation phase)
 
 /* Only keep the 10 most recent builds. */
 def projectProperties = [
+  [
+    $class: 'GithubProjectProperty',
+    projectUrlStr: PROJ_URL
+  ],
   [
     $class: 'BuildDiscarderProperty',
     strategy: [$class: 'LogRotator', numToKeepStr: '10']
@@ -30,9 +60,17 @@ properties(projectProperties)
 try {
   timestamps {
     node {
+      echo "running on node ${env.NODE_NAME}"
+      pipelineLibraryScmGit = new ScmGit(env, steps, 'https://github.com/zanata/zanata-pipeline-library')
+      pipelineLibraryScmGit.init(PIPELINE_LIBRARY_BRANCH)
+      mainScmGit = new ScmGit(env, steps, PROJ_URL)
+      mainScmGit.init(env.BRANCH_NAME)
+      notify = new Notifier(env, steps, currentBuild,
+          pipelineLibraryScmGit, mainScmGit, 'Jenkinsfile',
+      )
+
       ansicolor {
         stage('Checkout') {
-          info.printNode()
           notify.started()
 
           // Shallow Clone does not work with RHEL7, which use git-1.8.3
@@ -43,8 +81,7 @@ try {
         // Build and Unit Tests
         // The result is archived
         stage('Build') {
-          info.printNode()
-          info.printEnv()
+          notify.startBuilding()
           def testReports = 'target/surefire-reports/TEST-*.xml'
           def hpiFiles = 'target/*.hpi'
 
