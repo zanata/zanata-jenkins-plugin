@@ -57,9 +57,9 @@ properties(projectProperties)
  * Failed and stop the build
  * Yet able to create report
  */
-try {
-  timestamps {
-    node {
+timestamps {
+  node {
+    try {
       echo "running on node ${env.NODE_NAME}"
       pipelineLibraryScmGit = new ScmGit(env, steps, 'https://github.com/zanata/zanata-pipeline-library')
       pipelineLibraryScmGit.init(PIPELINE_LIBRARY_BRANCH)
@@ -104,13 +104,13 @@ try {
           // step([$class: 'JacocoPublisher'])
         }
       }
+    } catch (e) {
+      notify.failed()
+        junit allowEmptyResults: true,
+        keepLongStdio: false,
+        testDataPublishers: [[$class: 'StabilityTestDataPublisher']],
+        testResults: "**/${testReports}"
+        throw e
     }
   }
-} catch (e) {
-  notify.failed()
-  junit allowEmptyResults: true,
-      keepLongStdio: false,
-      testDataPublishers: [[$class: 'StabilityTestDataPublisher']],
-      testResults: "**/${testReports}"
-  throw e
 }
