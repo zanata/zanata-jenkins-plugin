@@ -141,9 +141,7 @@ timestamps {
           notify.startBuilding()
           def hpiFiles = 'target/*.hpi'
 
-          withEnv(["MVN_HOME=${ tool name: 'mvn', type: 'hudson.tasks.Maven$MavenInstallation' }"]) {
-            sh '$MVN_HOME/bin/mvn clean verify'
-          }
+          sh "mvn clean verify"
 
           junit allowEmptyResults: true,
             keepLongStdio: false,
