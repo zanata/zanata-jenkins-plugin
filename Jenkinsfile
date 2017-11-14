@@ -149,7 +149,7 @@ timestamps {
             testResults: "**/${testReports}"
 
           // notify if compile+unit test successful
-          notify.testResults(null)
+          notify.testResults('UNIT', null)
           archive "**/${hpiFiles},**/target/site/jacoco/**"
         }
 
