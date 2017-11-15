@@ -16,7 +16,7 @@ public static final String PROJ_URL = 'https://github.com/zanata/zanata-jenkins-
 // Import pipeline library for utility methods & classes:
 // ansicolor(), Notifier, PullRequests, Strings
 @Field
-public static final String PIPELINE_LIBRARY_BRANCH = 'ZNTA-2270-jenkins2'
+public static final String PIPELINE_LIBRARY_BRANCH = 'v0.3.1'
 
 @Field
 public static final String testReports = 'target/surefire-reports/TEST-*.xml'
@@ -24,7 +24,7 @@ public static final String testReports = 'target/surefire-reports/TEST-*.xml'
 
 // GROOVY-3278:
 //   Using referenced String constant as value of Annotation causes compile error
-@Library('zanata-pipeline-library@ZNTA-2270-jenkins2')
+@Library('zanata-pipeline-library@v0.3.1')
 import org.zanata.jenkins.Notifier
 import org.zanata.jenkins.PullRequests
 import org.zanata.jenkins.ScmGit
@@ -156,7 +156,7 @@ timestamps {
         stage('Report') {
           // this is not working properly yet
           // step([$class: 'JacocoPublisher'])
-          jacoco()
+          jacoco classPattern: 'target/site/jacoco'
           notify.finish()
         }
       }
