@@ -156,6 +156,8 @@ timestamps {
         stage('Report') {
           // this is not working properly yet
           // step([$class: 'JacocoPublisher'])
+          jacoco()
+          notify.finish()
         }
       }
     } catch (e) {
