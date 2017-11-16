@@ -156,7 +156,6 @@ timestamps {
         stage('Report') {
           // this is not working properly yet
           // step([$class: 'JacocoPublisher'])
-          jacoco([classPattern: '**/target/classes', inclusionPattern: '**/*.class'])
           notify.finish()
         }
       }
