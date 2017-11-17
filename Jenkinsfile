@@ -63,7 +63,9 @@ try {
         }
 
         stage('Report') {
-           step([$class: 'JacocoPublisher'])
+          // this is not working properly yet
+          step([$class: 'JacocoPublisher'])
+          notify.finish()
         }
       }
     }
