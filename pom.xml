@@ -297,6 +297,7 @@
           <!-- We use late property evaluation (@{argLine}) so that surefire
                will pick up the argLine set by jacoco:prepare-agent. -->
           <argLine>@{argLine}</argLine>
+          <excludedGroups>${exclude.test.group}</excludedGroups>
         </configuration>
       </plugin>
     </plugins>
