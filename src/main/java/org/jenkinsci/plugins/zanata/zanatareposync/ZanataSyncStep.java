@@ -1,3 +1,23 @@
+/*
+ * Copyright 2016, Red Hat, Inc. and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jenkinsci.plugins.zanata.zanatareposync;
 
 import java.io.File;
@@ -54,9 +74,11 @@ import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
- * Zanata builder that uses the bundled zanata client commands classes.
+ * A build step that uses the bundled zanata client commands classes to perform
+ * zanata push and pull.
  *
- * @author Patrick Huang <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
+ * @author Patrick Huang
+ *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
 public class ZanataSyncStep extends Builder implements SimpleBuildStep,
         HasSyncJobDetail {
@@ -165,7 +187,6 @@ public class ZanataSyncStep extends Builder implements SimpleBuildStep,
     public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException {
         // This is where you 'build' the project.
-        Handler logHandler = configLogger(listener.getLogger());
 
         StandardUsernameCredentials cred = CredentialsProvider.findCredentialById(zanataCredentialsId, StandardUsernameCredentials.class, build);
         if (cred == null) {
@@ -187,20 +208,21 @@ public class ZanataSyncStep extends Builder implements SimpleBuildStep,
 
         try {
             if (pushToZanata) {
-                pushToZanata(workspace, zanataSyncService);
+                pushToZanata(workspace, zanataSyncService, listener);
             }
             if (pullFromZanata) {
                 Git git =
                         Git.with(listener, new EnvVars(EnvVars.masterEnvVars));
                 GitSyncService
                         gitSyncService = new GitSyncService(this, git);
-                pullFromZanata(workspace, zanataSyncService, gitSyncService);
+                pullFromZanata(workspace, zanataSyncService, gitSyncService, listener);
+            }
+            if (!pushToZanata && !pullFromZanata) {
+                logger(listener).println("Both push and pull are disabled. Nothing to do.");
             }
         } catch (IOException | InterruptedException e) {
             logger(listener).println("Zanata Sync failed:" + e.getMessage());
             throw new RuntimeException(e);
-        } finally {
-            removeLogger(logHandler);
         }
     }
 
@@ -220,20 +242,29 @@ public class ZanataSyncStep extends Builder implements SimpleBuildStep,
         return loggerHandler;
     }
 
-    private static void removeLogger(Handler appender) {
-        java.util.logging.Logger.getLogger("org.zanata").removeHandler(appender);
+    private static void removeLogger(Handler handler) {
+        if (handler != null) {
+            java.util.logging.Logger.getLogger("org.zanata").removeHandler(handler);
+        }
     }
 
     private static void pullFromZanata(FilePath workspace,
-            final ZanataSyncServiceImpl service, GitSyncService gitSyncService)
+            final ZanataSyncServiceImpl service, GitSyncService gitSyncService,
+            TaskListener listener)
             throws IOException, InterruptedException {
         workspace.act(new FilePath.FileCallable<Void>() {
 
             @Override
             public Void invoke(File f, VirtualChannel channel)
                     throws IOException, InterruptedException {
-                service.pullFromZanata(f.toPath());
-                gitSyncService.syncTranslationToRepo(f.toPath());
+                Handler handler = null;
+                try {
+                    handler = configLogger(listener.getLogger());
+                    service.pullFromZanata(f.toPath());
+                    gitSyncService.syncTranslationToRepo(f.toPath());
+                } finally {
+                    removeLogger(handler);
+                }
                 return null;
             }
 
@@ -245,14 +276,19 @@ public class ZanataSyncStep extends Builder implements SimpleBuildStep,
     }
 
     private static void pushToZanata(FilePath workspace,
-            final ZanataSyncServiceImpl service)
+            final ZanataSyncServiceImpl service, TaskListener listener)
             throws IOException, InterruptedException {
         workspace.act(new FilePath.FileCallable<Void>() {
             @Override
             public Void invoke(File f, VirtualChannel channel)
                     throws IOException, InterruptedException {
-
-                service.pushToZanata(f.toPath());
+                Handler handler = null;
+                try {
+                    handler = configLogger(listener.getLogger());
+                    service.pushToZanata(f.toPath());
+                } finally {
+                    removeLogger(handler);
+                }
                 return null;
             }
 

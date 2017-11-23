@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 
+import org.jenkinsci.plugins.zanata.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.xml.sax.SAXException;
 
@@ -32,9 +34,11 @@ import jenkins.model.Jenkins;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+@Category(SlowTest.class)
 public class ZanataCLIInstallTest extends WithJenkins {
 
 
+    // TODO this will fail on windows
     @Test
     public void testInstallation() throws IOException, InterruptedException {
         VirtualChannel channel = Jenkins.getActiveInstance().getChannel();

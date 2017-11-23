@@ -1,0 +1,22 @@
+site_name: Zanata Jenkins Plugin
+docs_dir: docs
+repo_name: GitHub
+repo_url: https://github.com/jenkinsci/zanata-plugin
+# site_favicon: favicon.ico
+theme: readthedocs
+# theme_dir: For custom themes
+
+pages:
+- Home: 'index.md'
+- Release notes: 'release-notes.md'
+- Installation: 'installation.md'
+- Configuration:
+  - General: 'configuration/index.md'
+  - Zanata Sync Build Step: 'configuration/build-step/zanata-sync.md'
+  - Install Zanata CLI: 'configuration/build-step/install-cli.md'
+  - Zanata Sync via CLI Build Step: 'configuration/build-step/zanata-sync-via-cli.md'
+  - Post Build SCM Sync: 'configuration/post-build.md'
+- Pipeline build:
+  - General: 'pipeline/index.md'
+  - Example using Zanata Sync Build Step: 'pipeline/zanata-sync-pipeline-example.md'
+  - Example using Zanata Sync via CLI Build Step: 'pipeline/zanata-sync-via-cli-pipeline-example.md'

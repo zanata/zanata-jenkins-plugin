@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Red Hat, Inc. and individual contributors
+ * Copyright 2016, Red Hat, Inc. and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -18,21 +18,10 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jenkinsci.plugins.zanata.cli.service;
-
-import java.io.Serializable;
-import java.nio.file.Path;
-
-import org.jenkinsci.plugins.zanata.exception.ZanataSyncException;
-import org.zanata.client.commands.pull.PullOptions;
-import org.zanata.client.commands.push.PushOptions;
+package org.jenkinsci.plugins.zanata;
 
 /**
- * @author Patrick Huang <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
+ * JUnit test category marker.
  */
-public interface ZanataSyncService extends Serializable {
-
-    void pushToZanata(Path repoBase) throws ZanataSyncException;
-
-    void pullFromZanata(Path repoBase) throws ZanataSyncException;
+public interface SlowTest {
 }

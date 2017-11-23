@@ -7,7 +7,9 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.List;
 
+import org.jenkinsci.plugins.zanata.SlowTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 import hudson.model.AbstractProject;
@@ -27,6 +29,7 @@ import hudson.util.ListBoxModel;
  * @author Patrick Huang
  *         <a href="mailto:pahuang@redhat.com">pahuang@redhat.com</a>
  */
+@Category(SlowTest.class)
 public class ZanataSyncStepTest extends WithJenkins {
 
     @Test
